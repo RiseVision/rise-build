@@ -104,7 +104,7 @@ ARG CORE_URI=./core
 ADD $CORE_URI ./core
 RUN sudo chown $coin:$coin -R .
 
-RUN mkdir -p out/bin out/lib out/data out/etc out/logs out/pids
+RUN mkdir -p out/bin out/lib out/data/pg out/data/redis out/etc out/logs out/pids
 
 COPY ./build-assets/etc out/etc/
 
