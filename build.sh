@@ -19,7 +19,7 @@ rm -rf out/src/.git
 mv redis/src/{redis-cli,redis-server} out/bin
 
 # copy postgres stuff
-cp -a postgres/{lib,bin} out/
+cp -a postgres/{lib,bin,share} out/
 
 cp jq/jq out/bin
 
@@ -54,4 +54,7 @@ npm run transpile
 npm prune  --production >> /dev/null
 
 
-
+# Create script symlinks
+cd ..
+ln -s ./scripts/manager.sh manager.sh
+ln -s ../data/pg/postmaster.pid ./pids/pg.pid

@@ -1,11 +1,11 @@
 {
   "apps": [{
-    "name": "rise.app",
-    "script": "dist/app.js",
-    "cwd": ".",
-    "pid_file": "./pids/lisk.app.pid",
-    "out_file": "./logs/lisk.app.log",
-    "error_file": "./logs/lisk.app.err",
+    "name": "node.mainnet",
+    "script": "./dist/app.js",
+    "cwd": "./src",
+    "pid_file": "../pids/node.mainnet.pid",
+    "out_file": "../logs/node.mainnet.log",
+    "error_file": "../logs/node.mainnet.err",
     "log_date_format": "YYYY-MM-DD HH:mm:ss SSS",
     "watch": false,
     "kill_timeout" : 10000,

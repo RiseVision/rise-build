@@ -100,14 +100,14 @@ RUN curl -o node.tar.gz -J -L $NODE_URL && \
 # INSTALL PM2
 COPY ./build.sh /home/$coin/build.sh
 
-ARG CORE_URI=./core
+ARG CORE_URI=./build-assets/src
 ADD $CORE_URI ./core
 RUN sudo chown $coin:$coin -R .
 
 RUN mkdir -p out/bin out/lib out/data/pg out/data/redis out/etc out/logs out/pids
 
 COPY ./build-assets/etc out/etc/
-
+COPY ./build-assets/scripts out/scripts/
 
 #
 #ARG COREPATH=./core

@@ -1,16 +1,22 @@
 #!/usr/bin/env bash
 
 
-cd "$(cd -P -- "$(dirname -- "$0")" && pwd -P)" || exit 2
+cd "$(cd -P -- "$(dirname -- "$(readlink -f $0)")" && pwd -P)" || exit 2
 
 # Import env_vars and utils
 . "$(pwd)/env_vars.sh"
 . "$(pwd)/utils.sh"
+. "$(pwd)/includes/db.sh"
+. "$(pwd)/includes/redis.sh"
+. "$(pwd)/includes/node.sh"
+
+# Switch to root directory.
+cd ..
 
 
 # Allocates variables for use later, reusable for changing pm2 config.
 config() {
-    NETWORK_FILE="$(pwd)/../etc/.network"
+    NETWORK_FILE="$(pwd)/etc/.network"
     if [ ! -f "$NETWORK_FILE" ]; then
         [ "$NETWORK" ] || read -r -p "Which network do you want to run on? mainnet,testnet? (Default=mainnet): " NETWORK
         if [ "$NETWORK" == "mainnet" ] || [ "$NETWORK" == "" ]; then
@@ -31,49 +37,32 @@ config() {
         rm ${NETWORK_FILE}
         exit 2
     fi
-    CONFIG_PATH="$(pwd)/../src/etc/${NETWORK}/config.json"
-	DB_NAME="$(cat "$CONFIG_PATH" | jq -r ".db")"
-	DB_PORT="$(cat "$CONFIG_PATH" | jq -r ".db.port")"
-	DB_USER="$(cat "$CONFIG_PATH" | jq -r ".db.user")"
-	DB_PASS="$(cat "$CONFIG_PATH" | jq -r ".db.password")"
-	DB_DATA="$(pwd)/../data/pg"
-	LOGS_DIR="$(pwd)/../logs"
-	DB_LOG_FILE="${LOGS_DIR}/pgsql.log"
-	DB_SNAPSHOT="blockchain.db.gz"
-	DB_DOWNLOAD=Y
-
-    # Setup logging
+    CONFIG_PATH="$(pwd)/src/etc/${NETWORK}/config.json"
+	LOGS_DIR="$(pwd)/logs"
     SH_LOG_FILE="$LOGS_DIR/shell.out"
     exec > >(tee -ia "$SH_LOG_FILE")
     exec 2>&1
+
+    # Calls submodule scripts envs.
+    db_envs
+    redis_envs
+    node_envs
+}
+
+initialize_if_necessary() {
+    db_initialize
+    redis_initialize
+    node_initialize
 }
 
 first_init() {
-    rm -rf "$DB_DATA"
-    pg_ctl initdb -D "$DB_DATA" >> "$SH_LOG_FILE" 2>&1
-    sleep 5
-    start_db
-    sleep 2
+    db_ensure "stopped"
+    redis_ensure "stopped"
+    node_ensure "stopped"
 
-    ## CREATE USER
-
-    dropuser --if-exists "$DB_USER"  >> "$SH_LOG_FILE" 2>&1
-    createuser "$DB_USER"  >> "$SH_LOG_FILE" 2>&1
-    if ! psql -qd postgres -c "ALTER USER $DB_USER WITH PASSWORD '$DB_PASS';" >> "$SH_LOG_FILE" 2>&1; then
-		echo "X Failed to create DB user."
-		exit 1
-	else
-		echo "√ DB user created successfully."
-	fi
-
-    # CREATE DB
-    dropdb --if-exists "$DB_NAME" >> "$SH_LOG_FILE" 2>&1
-    if ! createdb -O "$DB_USER" "$DB_NAME" >> "$SH_LOG_FILE" 2>&1; then
-		echo "X Failed to create DB database."
-		exit 1
-	else
-		echo "√ DB database created successfully."
-	fi
+    db_reset
+    redis_reset
+    node_reset
 }
 
 setup_cron() {
@@ -100,49 +89,75 @@ EOF
 }
 
 
-start_db() {
-    if pgrep -x "postgres" > /dev/null 2>&1; then
-        echo "√ DB is running."
-    else
-        if ! pg_ctl -D "$DB_DATA" -l "$DB_LOG_FILE" start >> "$SH_LOG_FILE" 2>&1; then
-			echo "X Failed to start DB."
-			exit 1
-		else
-			echo "√ DB started successfully."
-		fi
-    fi
-}
-
 handle_start() {
     if [ "$1" == "node" ]; then
-        start_node
+        node_start
     elif [ "$1" == "db" ]; then
-        start_db
+        db_start
+    elif [ "$1" == "redis" ]; then
+        redis_start
     else
-        echo "Please specify ${COMMAND} node or ${COMMAND} db"
+        echo "Please specify ${COMMAND} node or ${COMMAND} db or ${COMMAND} redis"
         exit 2
     fi
 }
 
 
+handle_stop() {
+    if [ "$1" == "node" ]; then
+        node_stop
+    elif [ "$1" == "db" ]; then
+        db_stop
+    elif [ "$1" == "redis" ]; then
+        redis_stop
+    else
+        echo "Please specify ${COMMAND} node or ${COMMAND} db or ${COMMAND} redis"
+        exit 2
+    fi
+}
 # CREATE env vars.
 config
-
+initialize_if_necessary
 
 COMMAND="$1"
 
 case $1 in
+    "reset")
+        db_ensure "stopped"
+        db_reset
+
+        ;;
     "start")
         handle_start $2
         ;;
     "stop")
+        handle_stop $2
         ;;
     "status")
+        if db_running; then
+            echo "√ DB is running [$(db_pid)]"
+        else
+            echo "X DB not running!"
+        fi
+        if redis_running; then
+            echo "√ Redis is running [$(redis_pid)]"
+        else
+            echo "X Redis not running!"
+        fi
+        if node_running; then
+            echo "√ NODE is running [$(node_pid)]"
+        else
+            echo "X NODE not running!"
+        fi
         ;;
     "logs")
         ;;
     "help")
         ;;
     "backup")
+        db_ensure stopped
+        node_ensure stopped
+        redis_ensure stopped
+
         ;;
 esac
