@@ -58,3 +58,8 @@ npm prune  --production >> /dev/null
 cd ..
 ln -s ./scripts/manager.sh manager.sh
 ln -s ../data/pg/postmaster.pid ./pids/pg.pid
+
+
+# install pm2
+
+npm i pm2 -g

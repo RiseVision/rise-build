@@ -80,7 +80,7 @@ db_initialize() {
         fi
     fi
 
-    if [ $? -eq 1 ] ; then
+    if [ "$START" -eq 1 ] ; then
         echo '... Initializing DB ...'
         rm -rf "$DB_DATA"
         mkdir "$DB_DATA"

@@ -5,6 +5,7 @@
 node_envs() {
     export PM2_CONFIG="$(pwd)/etc/pm2-${NETWORK}.json"
     export PM2_APPNAME=$(cat "$PM2_CONFIG" | jq -r ".apps[0].name")
+    export NODE_PORT="$(cat "$CONFIG_PATH" | jq -r ".port")"
     _init_node_pid
 }
 
@@ -50,7 +51,7 @@ node_start() {
     if node_running ; then
         echo "√ NODE is running."
     else
-        if ! pm2 start "PM2_CONFIG" >> "$SH_LOG_FILE" 2>&1; then
+        if ! pm2 start "$PM2_CONFIG" >> "$SH_LOG_FILE" 2>&1; then
 			echo "X Failed to start NODE."
 			exit 1
 		else
@@ -80,4 +81,12 @@ node_reset() {
 
 node_initialize() {
     :
+}
+
+node_status() {
+    if node_running; then
+        echo "√ NODE is running [$(node_pid)] - [H=$(curl -s http://localhost:${NODE_PORT}/api/blocks/getStatus | jq -r ".height")]"
+    else
+        echo "X NODE not running!"
+    fi
 }

@@ -65,6 +65,44 @@ first_init() {
     node_reset
 }
 
+do_backup() {
+    node_ensure stopped
+    db_ensure running
+    mkdir -p ./data/backups
+    if [ -f ./data/backups/backup.lock ]; then
+        echo "X Backup is running"
+    else
+        echo "√ Previous backup is not running."
+    fi
+    # Create lock file.
+    touch ./data/backups/backup.lock
+
+    TARGETDB="${DB_NAME}_snap"
+    dropdb --if-exists "$TARGETDB" &> /dev/null
+    exit_if_prevfail "Cannot drop ${TARGETDB}"
+
+    vacuumdb --analyze --full "$DB_NAME" &> /dev/null
+    exit_if_prevfail "Cannot vacuum ${DB_NAME}"
+
+    createdb "$TARGETDB" &> /dev/null
+    exit_if_prevfail "Cannot createdb ${TARGETDB}"
+
+    pg_dump "$DB_NAME" | psql "$TARGETDB" &> /dev/null
+    exit_if_prevfail "Cannot copy ${DB_NAME} to ${TARGETDB}"
+
+    node_ensure running
+    BACKUP_HEIGHT=$(psql -d "$TARGETDB" -t -c 'select height from blocks order by height desc limit 1;' | xargs)
+    BACKUP_NAME="./backup_${DB_NAME}_${BACKUP_HEIGHT}.gz"
+    BACKUP_PATH="./data/backups/${BACKUP_NAME}"
+    pg_dump -O "$TARGETDB" | gzip > ./data/backups/backup_${DB_NAME}_${BACKUP_HEIGHT}.gz
+
+    rm ./data/backups/latest > /dev/null
+    ln -s "$BACKUP_NAME" "./data/backups/latest"
+    rm ./data/backups/backup.lock
+
+    echo "√ Backup performed. Height = ${BACKUP_HEIGHT}"
+}
+
 setup_cron() {
     local cmd="crontab"
     if ! command -v "$cmd" > /dev/null 2>&1; then
@@ -91,11 +129,15 @@ EOF
 
 handle_start() {
     if [ "$1" == "node" ]; then
-        node_start
+        node_ensure "running"
     elif [ "$1" == "db" ]; then
-        db_start
+        db_ensure "running"
     elif [ "$1" == "redis" ]; then
-        redis_start
+        redis_ensure "running"
+    elif [ "$1" == "all" ]; then
+        node_ensure "running"
+        db_ensure "running"
+        redis_ensure "running"
     else
         echo "Please specify ${COMMAND} node or ${COMMAND} db or ${COMMAND} redis"
         exit 2
@@ -105,11 +147,15 @@ handle_start() {
 
 handle_stop() {
     if [ "$1" == "node" ]; then
-        node_stop
+        node_ensure "stopped"
     elif [ "$1" == "db" ]; then
-        db_stop
+        db_ensure "stopped"
     elif [ "$1" == "redis" ]; then
-        redis_stop
+        redis_ensure "stopped"
+    elif [ "$1" == "all" ]; then
+        node_ensure "stopped"
+        db_ensure "stopped"
+        redis_ensure "stopped"
     else
         echo "Please specify ${COMMAND} node or ${COMMAND} db or ${COMMAND} redis"
         exit 2
@@ -144,20 +190,15 @@ case $1 in
         else
             echo "X Redis not running!"
         fi
-        if node_running; then
-            echo "√ NODE is running [$(node_pid)]"
-        else
-            echo "X NODE not running!"
-        fi
+
+        node_status
+
         ;;
     "logs")
         ;;
     "help")
         ;;
     "backup")
-        db_ensure stopped
-        node_ensure stopped
-        redis_ensure stopped
-
+        do_backup
         ;;
 esac
