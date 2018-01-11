@@ -201,4 +201,18 @@ case $1 in
     "backup")
         do_backup
         ;;
+    "restoreBackup")
+        if [ ! -e "./data/backups/latest" ]; then
+            echo "X There is no backup to restore from";
+            exit 1
+        fi
+        node_ensure stopped
+        dropdb --if-exists "$DB_NAME" &> /dev/null
+        exit_if_prevfail "Cannot drop ${DB_NAME}"
+
+        createdb "$DB_NAME" &> /dev/null
+        gunzip -c ./data/backups/latest | psql "$DB_NAME" >> /dev/null
+
+        node_ensure running
+
 esac
