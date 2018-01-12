@@ -40,9 +40,7 @@ cp -a ./node/bin/* ./out/bin
 cd
 export PATH="$(pwd)/postgres/bin:$(pwd)/out/bin:$PATH"
 export LD_LIBRARY_PATH="$(pwd)/postgres/lib:$(pwd)/out/lib:$LD_LIBRARY_PATH"
-echo $PATH;
-echo $LD_LIBRARY_PATH;
-echo $(pwd);
+
 
 cd out/src
 npm i >> /dev/null
@@ -62,4 +60,8 @@ ln -s ../data/pg/postmaster.pid ./pids/pg.pid
 
 # install pm2
 
-npm i pm2 -g
+npm i pm2 -g >> /dev/null
+
+cd ..
+echo "Creating Tar.gz FILE"
+sudo tar -czf tar/out.tar.gz -C ./out .

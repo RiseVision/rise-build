@@ -70,6 +70,7 @@ db_reset() {
 }
 
 db_initialize() {
+    START=0
     if db_running; then
         psql -ltAq | grep -q "^${DB_NAME}" >> "$SH_LOG_FILE" 2>&1
         START=$?

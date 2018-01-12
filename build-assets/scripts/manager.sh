@@ -40,6 +40,8 @@ config() {
     CONFIG_PATH="$(pwd)/src/etc/${NETWORK}/config.json"
 	LOGS_DIR="$(pwd)/logs"
     SH_LOG_FILE="$LOGS_DIR/shell.out"
+    NUM_DELEGATES=101
+
     exec > >(tee -ia "$SH_LOG_FILE")
     exec 2>&1
 
@@ -64,12 +66,14 @@ first_init() {
     redis_reset
     node_reset
 }
-
+is_backupping() {
+    [ -f ./data/backups/backup.lock ]
+}
 do_backup() {
     node_ensure stopped
     db_ensure running
     mkdir -p ./data/backups
-    if [ -f ./data/backups/backup.lock ]; then
+    if is_backupping; then
         echo "X Backup is running"
     else
         echo "√ Previous backup is not running."
@@ -202,6 +206,9 @@ case $1 in
         do_backup
         ;;
     "restoreBackup")
+        if is_backupping; then
+            echo "X Backup in progress."
+        fi
         if [ ! -e "./data/backups/latest" ]; then
             echo "X There is no backup to restore from";
             exit 1
@@ -214,5 +221,29 @@ case $1 in
         gunzip -c ./data/backups/latest | psql "$DB_NAME" >> /dev/null
 
         node_ensure running
+        ;;
+    "performSnapshot")
+        # perform backup
+#        do_backup
+        BACKUP_HEIGHT=$(basename $(readlink -f ./data/backups/latest) | rev | cut -d '_' -f 1 | cut -d '.' -f 2 | rev)
+
+        TARGETDB="${DB_NAME}_snap"
+        dropdb --if-exists "$TARGETDB" &> /dev/null
+        exit_if_prevfail "Cannot drop ${TARGETDB}"
+
+        createdb -O "$DB_USER" "$TARGETDB"  &> /dev/null
+        exit_if_prevfail "Cannot createdb ${TARGETDB}"
+        export PGPASSWORD="$DB_PASS"
+        gunzip -c ./data/backups/latest | psql -U "$DB_USER" "$TARGETDB" >> /dev/null
+        OLDNETWORK=$NETWORK
+
+        # HIHACK NODE ENVS
+        export NETWORK="${OLDNETWORK}-snapshot"
+        node_envs
+        node_ensure running
+
+
+
+
 
 esac

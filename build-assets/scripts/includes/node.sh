@@ -41,7 +41,7 @@ node_running() {
 node_ensure() {
     WHAT="$1" # running, stopped
     if [ "$1" == "running" ] && ! node_running; then
-        node_start
+        node_start $2
     elif [ "$1" == "stopped" ] && node_running; then
         node_stop
     fi
@@ -51,7 +51,7 @@ node_start() {
     if node_running ; then
         echo "√ NODE is running."
     else
-        if ! pm2 start "$PM2_CONFIG" >> "$SH_LOG_FILE" 2>&1; then
+        if ! pm2 start "$PM2_CONFIG"  >> "$SH_LOG_FILE" 2>&1; then
 			echo "X Failed to start NODE."
 			exit 1
 		else

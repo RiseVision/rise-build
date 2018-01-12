@@ -8,7 +8,7 @@
     "error_file": "../logs/node.testnet.err",
     "log_date_format": "YYYY-MM-DD HH:mm:ss SSS",
     "watch": false,
-    "kill_timeout" : 10000,
+    "kill_timeout" : 20000,
     "max_memory_restart": "1024M",
     "node_args": "--max_old_space_size=1024",
     "args": "-n testnet",
