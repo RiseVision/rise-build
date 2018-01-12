@@ -1,7 +1,7 @@
 #!/bin/bash
 
 if [ ! -d ./core ]; then
-    echo "Please checkout core please."
+    echo "Please mount volume with core please."
 fi
 
 VERSION=$(cat core/package.json | ./jq/jq -r '.version')
@@ -14,9 +14,14 @@ echo "Building $VERSION from branch ${BRANCH}..."
 cp -a ./core/ out/
 mv out/core out/src
 rm -rf out/src/.git
+sudo chown $(whoami):$(whoami) -R ./out/src
+
 
 # copy redis commands to bin folder.
 mv redis/src/{redis-cli,redis-server} out/bin
+
+# copy logrotate command to bin folder
+mv logrotate/logrotate out/bin
 
 # copy postgres stuff
 cp -a postgres/{lib,bin,share} out/
@@ -65,3 +70,4 @@ npm i pm2 -g >> /dev/null
 cd ..
 echo "Creating Tar.gz FILE"
 sudo tar -czf tar/out.tar.gz -C ./out .
+sudo chown $(stat -c '%u' ./tar):$(stat -c '%g' ./tar) tar/out.tar.gz

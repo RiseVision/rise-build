@@ -17,6 +17,10 @@ ARG REDIS_URL=http://download.redis.io/releases/$REDIS_DIR.tar.gz
 ARG JQ_DIR=jq-1.5
 ARG JQ_URL=https://github.com/stedolan/jq/releases/download/$JQ_DIR/$JQ_DIR.tar.gz
 
+ARG LOGROTATE_VER=3.13.0
+ARG LOGROTATE_DIR=logrotate-$LOGROTATE_VER
+ARG LOGROTATE_URL=https://github.com/logrotate/logrotate/releases/download/$LOGROTATE_VER/logrotate-${LOGROTATE_VER}.tar.gz
+
 ENV LANG en_US.UTF-8
 ENV LANGUAGE en_US:en
 ENV LC_ALL en_US.UTF-8
@@ -25,7 +29,7 @@ ENV LC_ALL en_US.UTF-8
 # Install prerequisites to build and set locales to en_US utf8.
 
 RUN apt-get update && \
-    apt-get install -y -qq autoconf automake build-essential sudo curl chrpath git libncurses5-dev libsodium-dev libssl-dev libtool locales python libssl-dev&& \
+    apt-get install -y -qq autoconf automake build-essential sudo curl chrpath git libncurses5-dev libpopt-dev libsodium-dev libssl-dev libtool locales python libssl-dev&& \
     sed -i -e 's/# en_US.UTF-8 UTF-8/en_US.UTF-8 UTF-8/' /etc/locale.gen && \
     dpkg-reconfigure --frontend=noninteractive locales && \
     update-locale LANG=en_US.UTF-8
@@ -85,32 +89,29 @@ RUN cd jq && \
     ./configure  && \
     make -j $PARALLEL_MAKE_JOBS
 
-# Build nodjes
+# Build nodejs
 RUN curl -o node.tar.gz -J -L $NODE_URL && \
     tar -zxf node.tar.gz && \
     rm node.tar.gz && \
     mv node-v${NODE_VERSION}-linux-x64 node;
 
-#RUN cd node_src && \
-#    ./configure --prefix=/home/$coin/node && \
-#    make -j $PARALLEL_MAKE_JOBS && \
-#    make install && \
-#    cd .. && rm -rf node_src
+# Build logrotate
+RUN curl -o logrotate.tar.gz -J -L $LOGROTATE_URL && \
+    tar -zxf logrotate.tar.gz && \
+    rm logrotate.tar.gz && \
+    mv $LOGROTATE_DIR logrotate;
 
-# INSTALL PM2
+RUN cd logrotate && \
+    autoreconf -fiv  && \
+    ./configure && \
+    make
+
 COPY ./build.sh /home/$coin/build.sh
-
-ARG CORE_URI=./build-assets/src
-ADD $CORE_URI ./core
-RUN sudo chown $coin:$coin -R .
 
 RUN mkdir -p out/bin out/lib out/data/pg out/data/redis out/etc out/logs out/pids
 
 COPY ./build-assets/etc out/etc/
 COPY ./build-assets/scripts out/scripts/
 
-#
-#ARG COREPATH=./core
-#ADD $COREPATH ./core/
 
 CMD ["bash", "-c", "./build.sh"]
