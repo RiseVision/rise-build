@@ -55,6 +55,7 @@ initialize_if_necessary() {
     db_initialize
     redis_initialize
     node_initialize
+    setup_cron
 }
 
 first_init() {
@@ -113,13 +114,20 @@ setup_cron() {
         echo "X crontab not found"
         return 1
     fi
-    	crontab=$($cmd -l 2> /dev/null | sed '/lisk\.sh start/d' 2> /dev/null)
+    crontab=$($cmd -l 2> /dev/null | sed '/#managed_rise/d' 2> /dev/null)
 
 	crontab=$(cat <<-EOF
 		$crontab
-		@reboot $(command -v "bash") $(pwd)/manager.sh start > ${LOGS_DIR}/cron.log 2>&1
+		@reboot $(command -v "bash") $(pwd)/manager.sh start > ${LOGS_DIR}/cron.log 2>&1 #managed_rise
+		@daily $(command -v "bash") $(pwd)/manager.sh logRotate > ${LOGS_DIR}/cron.log 2>&1 #managed_rise
 EOF
 	)
+
+    oldcrontab=$($cmd -l 2> /dev/null)
+
+    if [ "$oldcrontab" == "$crontab" ]; then
+        return 0
+    fi
 
 	if ! printf "%s\n" "$crontab" | $cmd - >> "$SH_LOG_FILE" 2>&1; then
 		echo "X Failed to update crontab."
@@ -175,7 +183,6 @@ case $1 in
     "reset")
         db_ensure "stopped"
         db_reset
-
         ;;
     "start")
         handle_start $2
@@ -197,8 +204,6 @@ case $1 in
 
         node_status
 
-        ;;
-    "logs")
         ;;
     "help")
         ;;
@@ -288,5 +293,8 @@ case $1 in
         db_reset
         redis_reset
 
+        ;;
+    "logRotate")
+        logrotate ./etc/logrotate.conf
         ;;
 esac
