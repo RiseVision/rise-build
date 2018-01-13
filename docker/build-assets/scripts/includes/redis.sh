@@ -9,6 +9,10 @@ redis_envs() {
     export REDIS_PID="$(pwd)/pids/redis.pid"
 }
 
+redis_reset() {
+    rm -rf './data/redis'
+    mkdir -p './data/redis'
+}
 redis_pid() {
     local pid=$1
     local res=$(head -1 "$REDIS_PID")

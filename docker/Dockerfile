@@ -103,7 +103,7 @@ RUN curl -o logrotate.tar.gz -J -L $LOGROTATE_URL && \
 
 RUN cd logrotate && \
     autoreconf -fiv  && \
-    ./configure && \
+    ./configure --with-state-file-path='./data/logrotate.status' && \
     make
 
 COPY ./build.sh /home/$coin/build.sh

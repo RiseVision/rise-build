@@ -208,23 +208,31 @@ case $1 in
     "restoreBackup")
         if is_backupping; then
             echo "X Backup in progress."
-        fi
-        if [ ! -e "./data/backups/latest" ]; then
-            echo "X There is no backup to restore from";
             exit 1
         fi
-        node_ensure stopped
-        dropdb --if-exists "$DB_NAME" &> /dev/null
-        exit_if_prevfail "Cannot drop ${DB_NAME}"
+        BACKUP_FILE="./data/backups/latest"
+        if [ "$2" != "" ]; then
+            BACKUP_FILE="$2"
+        fi
+        if [ ! -e "$BACKUP_FILE" ]; then
+            echo "X Backup file does not exist.";
+            exit 1
+        fi
+        touch ./data/backups/backup.lock
 
-        createdb "$DB_NAME" &> /dev/null
-        gunzip -c ./data/backups/latest | psql "$DB_NAME" >> /dev/null
+        node_ensure stopped
+        db_ensure running
+        dropdb --if-exists "$DB_NAME"
+        db_initialize
+
+        gunzip -c "$BACKUP_FILE" | psql "$DB_NAME" >> /dev/null
 
         node_ensure running
+        rm ./data/backups/backup.lock
         ;;
     "performSnapshot")
         # perform backup
-#        do_backup
+        do_backup
         BACKUP_HEIGHT=$(basename $(readlink -f ./data/backups/latest) | rev | cut -d '_' -f 1 | cut -d '.' -f 2 | rev)
 
         TARGETDB="${DB_NAME}_snap"
@@ -234,16 +242,51 @@ case $1 in
         createdb -O "$DB_USER" "$TARGETDB"  &> /dev/null
         exit_if_prevfail "Cannot createdb ${TARGETDB}"
         export PGPASSWORD="$DB_PASS"
-        gunzip -c ./data/backups/latest | psql -U "$DB_USER" "$TARGETDB" >> /dev/null
-        OLDNETWORK=$NETWORK
+        gunzip -c ./data/backups/latest | psql -U "$DB_USER" "$TARGETDB" >> /dev/null 2>&1
+        exit_if_prevfail "Cannot import db to snapshot DB"
 
-        # HIHACK NODE ENVS
-        export NETWORK="${OLDNETWORK}-snapshot"
-        node_envs
-        node_ensure running
+        # run node in snapshot verification mode.
+        cd ./src/
+        node ./dist/app.js -n "$NETWORK" -s -o "\$.db.database=$TARGETDB"  > ../logs/snapshot.log 2>&1 & THEPID=$!
+        cd ..
 
+        start=$(date +'%s')
+        echo "Snapshot verification in process..."
+        wait $THEPID
+        exit_if_prevfail "Failed to verify snapshot"
+        echo "√ Snapshot verified $(($(date +'%s') - $start))"
 
+        # Delete peers table.
+        psql -d "$TARGETDB" -c "delete from peers;" &> /dev/null
 
+        # Vacuum db before dumping
+        vacuumdb --analyze --full "$TARGETDB" &> /dev/null
 
+        HEIGHT="$(psql -d "$TARGETDB" -t -c "select height from blocks order by height desc limit 1;" | xargs)"
+        SNAP_PATH="./data/backups/snap_${HEIGHT}.gz"
+        pg_dump -O "$TARGETDB" | gzip > "$SNAP_PATH"
 
+        # Drop DB
+
+        dropdb --if-exists "$TARGETDB"
+
+        echo "√ Snapshot created in $(($(date +'%s') - $start)) secs -> $SNAP_PATH"
+        ;;
+    "reset")
+        echo "This process will remove the database "
+        read -r -n "Are you sure you want to proceed? (y/n): " YN
+
+        if [ "$YN" != "y" ]; then
+            echo "Goodbye."
+            exit 0;
+        fi
+
+        db_ensure stop
+        node_ensure stop
+        redis_ensure stop
+
+        db_reset
+        redis_reset
+
+        ;;
 esac

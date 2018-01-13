@@ -67,6 +67,7 @@ db_stop() {
 
 db_reset() {
     rm -rf "$DB_DATA"
+    mkdir -p "$DB_DATA"
 }
 
 db_initialize() {
@@ -78,17 +79,16 @@ db_initialize() {
         # Checking the data directory
         if [ ! "$(ls -A "$DB_DATA")" ]; then
             START="1"
+            echo '... Initializing DB ...'
+            db_reset
+            pg_ctl initdb -D "$DB_DATA" >> "$SH_LOG_FILE" 2>&1
+            sleep 5
+            db_start
+            sleep 2
         fi
     fi
 
     if [ "$START" -eq 1 ] ; then
-        echo '... Initializing DB ...'
-        rm -rf "$DB_DATA"
-        mkdir "$DB_DATA"
-        pg_ctl initdb -D "$DB_DATA" >> "$SH_LOG_FILE" 2>&1
-        sleep 5
-        db_start
-        sleep 2
         dropuser --if-exists "$DB_USER"  >> "$SH_LOG_FILE" 2>&1
         createuser "$DB_USER"  >> "$SH_LOG_FILE" 2>&1
         if ! psql -qd postgres -c "ALTER USER $DB_USER WITH PASSWORD '$DB_PASS';" >> "$SH_LOG_FILE" 2>&1; then
