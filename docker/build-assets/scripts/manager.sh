@@ -31,7 +31,7 @@ config() {
     if [ "$(grep "mainnet" "${NETWORK_FILE}")" ]; then
         NETWORK="mainnet"
     elif [ "$(grep "testnet" "${NETWORK_FILE}")" ]; then
-        NETWORK="mainnet"
+        NETWORK="testnet"
     else
         echo "Network is invalid. Restart the script to reset."
         rm ${NETWORK_FILE}
