@@ -12,22 +12,25 @@ if ! [ -x "$(command -v docker)" ]; then
     exit 1
 fi
 
-
-VERSION=$(cat core/package.json | jq -r ".version")
 COMMITSHA=$(cd core; git show -s --format=%h)
 
-read -r -p "Do you want to build version $VERSION? (y/n): " YN
+if [ "$VERSION" == "" ]; then
+    VERSION=$(cat core/package.json | jq -r ".version")
+    read -r -p "Do you want to build version $VERSION? (y/n): " YN
 
-if [ "$YN" != "y" ]; then
-    exit 0;
+    if [ "$YN" != "y" ]; then
+        exit 0;
+    fi
 fi
 
-read -r -p "Is this a mainnet build? (y/n): " YN
+if [ "$NETWORK" == "" ]; then
+    read -r -p "Is this a mainnet build? (y/n): " YN
 
-if [ "$YN" == "y" ]; then
-    NETWORK="mainnet"
-else
-    NETWORK="testnet"
+    if [ "$YN" == "y" ]; then
+        NETWORK="mainnet"
+    else
+        NETWORK="testnet"
+    fi
 fi
 
 
