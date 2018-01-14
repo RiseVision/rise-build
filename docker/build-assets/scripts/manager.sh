@@ -108,6 +108,22 @@ do_backup() {
     echo "√ Backup performed. Height = ${BACKUP_HEIGHT}"
 }
 
+do_help() {
+    echo "Help for manager.sh:"
+    echo -e "\tstart (what)            | Starts service. What can be node, pg, redis, all"
+    echo -e "\tstop (what)             | Stops service. What can be node, pg, redis, all"
+    echo -e "\tstatus                  | Print services status and pids"
+    echo -e "\tbackup                  | Perform a database backup"
+    echo -e "\trestoreBackup [file]    | Restore a database backup (uses latest if no file is provided)"
+
+    echo -e "\n** Advanced commands **"
+
+    echo -e "\treset                   | Stops and resets data."
+    echo -e "\tperformSnapshot         | Performs an optimized database snapshot with validation"
+    echo -e "\tlogRotate               | Performs log rotation"
+
+}
+
 setup_cron() {
     local cmd="crontab"
     if ! command -v "$cmd" > /dev/null 2>&1; then
@@ -206,6 +222,7 @@ case $1 in
 
         ;;
     "help")
+        do_help
         ;;
     "backup")
         do_backup
