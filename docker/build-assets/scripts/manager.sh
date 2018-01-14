@@ -118,7 +118,7 @@ setup_cron() {
 
 	crontab=$(cat <<-EOF
 		$crontab
-		@reboot $(command -v "bash") $(pwd)/manager.sh start > ${LOGS_DIR}/cron.log 2>&1 #managed_rise
+		@reboot $(command -v "bash") $(pwd)/manager.sh start all > ${LOGS_DIR}/cron.log 2>&1 #managed_rise
 		@daily $(command -v "bash") $(pwd)/manager.sh logRotate > ${LOGS_DIR}/cron.log 2>&1 #managed_rise
 EOF
 	)
@@ -147,9 +147,9 @@ handle_start() {
     elif [ "$1" == "redis" ]; then
         redis_ensure "running"
     elif [ "$1" == "all" ]; then
-        node_ensure "running"
         db_ensure "running"
         redis_ensure "running"
+        node_ensure "running"
     else
         echo "Please specify ${COMMAND} node or ${COMMAND} db or ${COMMAND} redis"
         exit 2
