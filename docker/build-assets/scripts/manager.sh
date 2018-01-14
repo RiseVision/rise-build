@@ -56,6 +56,19 @@ initialize_if_necessary() {
     redis_initialize
     node_initialize
     setup_cron
+
+    if [ ! -f ./etc/node_config.json ]; then
+        cat <<< '
+{
+  "fileLogLevel": "error",
+  "forging": {
+    "secret": []
+}
+' > ./etc/node_config.json
+        echo "√ Created node-config file.."
+   fi
+
+
 }
 
 first_init() {
