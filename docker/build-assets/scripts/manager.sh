@@ -252,14 +252,17 @@ case $1 in
             echo "X Backup file does not exist.";
             exit 1
         fi
+        mkdir -p ./data/backups
         touch ./data/backups/backup.lock
 
         node_ensure stopped
         db_ensure running
         dropdb --if-exists "$DB_NAME"
         db_initialize
+        db_ensure running
 
-        gunzip -c "$BACKUP_FILE" | psql "$DB_NAME" >> /dev/null
+        sleep 5
+        gunzip -c "$BACKUP_FILE" | psql -U "$DB_USER" "$DB_NAME" >> /dev/null 2>&1
 
         node_ensure running
         rm ./data/backups/backup.lock
