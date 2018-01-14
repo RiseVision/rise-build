@@ -108,7 +108,8 @@ RUN cd logrotate && \
 
 COPY ./build.sh /home/$coin/build.sh
 
-RUN mkdir -p out/bin out/lib out/data/pg out/data/redis out/etc out/logs out/pids
+RUN mkdir -p out/bin out/lib out/data/pg out/data/redis out/etc out/logs out/pids && \
+    chmod 0700 out/data/pg
 
 COPY ./build-assets/etc out/etc/
 COPY ./build-assets/scripts out/scripts/
