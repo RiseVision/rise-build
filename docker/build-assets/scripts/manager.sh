@@ -58,13 +58,12 @@ initialize_if_necessary() {
     setup_cron
 
     if [ ! -f ./etc/node_config.json ]; then
-        cat <<< '
-{
+        cat <<< '{
   "fileLogLevel": "error",
   "forging": {
     "secret": []
-}
-' > ./etc/node_config.json
+  }
+}' > ./etc/node_config.json
         echo "√ Created node-config file.."
    fi
 
