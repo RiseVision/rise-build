@@ -14,6 +14,7 @@ fi
 
 
 VERSION=$(cat core/package.json | jq -r ".version")
+COMMITSHA=$(cd core; git show -s --format=%h)
 
 read -r -p "Do you want to build version $VERSION? (y/n): " YN
 
@@ -45,7 +46,8 @@ sleep 2
 exec_cmd "docker run --rm -v $(pwd):/home/rise/tar -v $(pwd)/core:/home/rise/core rise_build_env"
 exit_if_prevfail
 
-FINAL_NAME="rise_${VERSION}_${NETWORK}.tar.gz"
-mv out.tar.gz rise_${VERSION}_${NETWORK}.tar.gz
+FINAL_NAME="rise_${VERSION}_${NETWORK}_${COMMITSHA}.tar.gz"
+mv out.tar.gz $FINAL_NAME
+sha1sum "$FINAL_NAME" > "${FINAL_NAME}.sha1"
 
 echo "√ Image created. ${FINAL_NAME}"
