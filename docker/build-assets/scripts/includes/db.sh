@@ -40,13 +40,13 @@ db_ensure() {
 
 db_start() {
     if db_running ; then
-        echo "√ DB is running."
+        echo "$GC DB is running."
     else
         if ! pg_ctl -D "$DB_DATA" -l "$DB_LOG_FILE" start >> "$SH_LOG_FILE" 2>&1; then
-			echo "X Failed to start DB."
+			echo "$RX Failed to start DB."
 			exit 1
 		else
-			echo "√ DB started successfully."
+			echo "$GC DB started successfully."
 		fi
     fi
 }
@@ -54,12 +54,12 @@ db_start() {
 
 db_stop() {
     if ! db_running; then
-        echo "X DB is not running"
+        echo "$RX DB is not running"
     else
         if pg_ctl -D "$DB_DATA" -l "$DB_LOG_FILE" stop >> "$SH_LOG_FILE" 2>&1; then
-            echo "√ DB stopped".
+            echo "$GC DB stopped".
         else
-            echo "X Failed to stop DB"
+            echo "$RX Failed to stop DB"
         fi
     fi
 }
@@ -92,19 +92,19 @@ db_initialize() {
         dropuser --if-exists "$DB_USER"  >> "$SH_LOG_FILE" 2>&1
         createuser "$DB_USER"  >> "$SH_LOG_FILE" 2>&1
         if ! psql -qd postgres -c "ALTER USER $DB_USER WITH PASSWORD '$DB_PASS';" >> "$SH_LOG_FILE" 2>&1; then
-            echo "X Failed to create DB user."
+            echo "$RX Failed to create DB user."
             exit 1
         else
-            echo "√ DB user created."
+            echo "$GC DB user created."
         fi
 
         # CREATE DB
         dropdb --if-exists "$DB_NAME" >> "$SH_LOG_FILE" 2>&1
         if ! createdb -O "$DB_USER" "$DB_NAME" >> "$SH_LOG_FILE" 2>&1; then
-            echo "X Failed to create DB database."
+            echo "$RX Failed to create DB database."
             exit 1
         else
-            echo "√ DB created."
+            echo "$GC DB created."
         fi
 
         # STOP DB

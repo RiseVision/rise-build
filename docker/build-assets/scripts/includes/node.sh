@@ -10,6 +10,8 @@ node_envs() {
 }
 
 _init_node_pid() {
+    # Starts pm2 if not started already.
+    pm2 jlist > /dev/null 2>&1
     PM2_PID="$( pm2 jlist |jq -r ".[] | select(.name == \"$PM2_APPNAME\").pm2_env.pm_pid_path" )"
     if [ "$PM2_PID" != "" ]; then
         export NODE_PID="$PM2_PID"
@@ -49,13 +51,13 @@ node_ensure() {
 
 node_start() {
     if node_running ; then
-        echo "√ NODE is running."
+        echo "$GC NODE is running."
     else
         if ! pm2 start "$PM2_CONFIG"  >> "$SH_LOG_FILE" 2>&1; then
-			echo "X Failed to start NODE."
+			echo "$RX Failed to start NODE."
 			exit 1
 		else
-			echo "√ NODE started successfully."
+			echo "$GC NODE started successfully."
 		fi
     fi
 }
@@ -63,14 +65,14 @@ node_start() {
 
 node_stop() {
     if ! node_running; then
-        echo "X NODE is not running"
+        echo "$RX NODE is not running"
     else
         pm2 delete "$PM2_CONFIG" >> "$SH_LOG_FILE"
         sleep 1
         if node_running; then
-            echo "X Failed to stop node "
+            echo "$RX Failed to stop node "
         else
-            echo "√ NODE stopped successfully."
+            echo "$GC NODE stopped successfully."
         fi
     fi
 }
@@ -85,8 +87,8 @@ node_initialize() {
 
 node_status() {
     if node_running; then
-        echo "√ NODE is running [$(node_pid)] - [H=$(curl -s http://localhost:${NODE_PORT}/api/blocks/getStatus | jq -r ".height")]"
+        echo "$GC NODE is running [$(node_pid)] - [H=$(curl -s http://localhost:${NODE_PORT}/api/blocks/getStatus | jq -r ".height")]"
     else
-        echo "X NODE not running!"
+        echo "$RX NODE not running!"
     fi
 }

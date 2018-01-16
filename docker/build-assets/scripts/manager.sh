@@ -1,5 +1,9 @@
 #!/usr/bin/env bash
 
+if [[ $EUID -eq 0 ]]; then
+    echo "$RX This script should not be run using sudo or as the root user"
+    exit 1
+fi
 
 cd "$(cd -P -- "$(dirname -- "$(readlink -f $0)")" && pwd -P)" || exit 2
 
@@ -33,7 +37,7 @@ config() {
     elif [ "$(grep "testnet" "${NETWORK_FILE}")" ]; then
         NETWORK="testnet"
     else
-        echo "Network is invalid. Restart the script to reset."
+        echo "$RX Network is invalid. Restart the script to reset."
         rm ${NETWORK_FILE}
         exit 2
     fi
@@ -64,7 +68,7 @@ initialize_if_necessary() {
     "secret": []
   }
 }' > ./etc/node_config.json
-        echo "√ Created node-config file.."
+        echo "$GC Created node-config file.."
    fi
 
 
@@ -87,9 +91,9 @@ do_backup() {
     db_ensure running
     mkdir -p ./data/backups
     if is_backupping; then
-        echo "X Backup is running"
+        echo "$RX Backup is running"
     else
-        echo "√ Previous backup is not running."
+        echo "$GC Previous backup is not running."
     fi
     # Create lock file.
     touch ./data/backups/backup.lock
@@ -117,7 +121,7 @@ do_backup() {
     ln -s "$BACKUP_NAME" "./data/backups/latest"
     rm ./data/backups/backup.lock
 
-    echo "√ Backup performed. Height = ${BACKUP_HEIGHT}"
+    echo "$GC Backup performed. Height = ${BACKUP_HEIGHT}"
 }
 
 do_help() {
@@ -139,7 +143,7 @@ do_help() {
 setup_cron() {
     local cmd="crontab"
     if ! command -v "$cmd" > /dev/null 2>&1; then
-        echo "X crontab not found"
+        echo "$RX crontab not found"
         return 1
     fi
     crontab=$($cmd -l 2> /dev/null | sed '/#managed_rise/d' 2> /dev/null)
@@ -158,10 +162,10 @@ EOF
     fi
 
 	if ! printf "%s\n" "$crontab" | $cmd - >> "$SH_LOG_FILE" 2>&1; then
-		echo "X Failed to update crontab."
+		echo "$RX Failed to update crontab."
 		return 1
 	else
-		echo "√ Crontab updated successfully."
+		echo "$GC Crontab updated successfully."
 		return 0
 	fi
 }
@@ -220,14 +224,14 @@ case $1 in
         ;;
     "status")
         if db_running; then
-            echo "√ DB is running [$(db_pid)]"
+            echo "$GC DB is running [$(db_pid)]"
         else
-            echo "X DB not running!"
+            echo "$RX DB not running!"
         fi
         if redis_running; then
-            echo "√ Redis is running [$(redis_pid)]"
+            echo "$GC Redis is running [$(redis_pid)]"
         else
-            echo "X Redis not running!"
+            echo "$RX Redis not running!"
         fi
 
         node_status
@@ -241,7 +245,7 @@ case $1 in
         ;;
     "restoreBackup")
         if is_backupping; then
-            echo "X Backup in progress."
+            echo "$RX Backup in progress."
             exit 1
         fi
         BACKUP_FILE="./data/backups/latest"
@@ -249,7 +253,7 @@ case $1 in
             BACKUP_FILE="$2"
         fi
         if [ ! -e "$BACKUP_FILE" ]; then
-            echo "X Backup file does not exist.";
+            echo "$RX Backup file does not exist.";
             exit 1
         fi
         mkdir -p ./data/backups
@@ -291,7 +295,7 @@ case $1 in
         echo "Snapshot verification in process..."
         wait $THEPID
         exit_if_prevfail "Failed to verify snapshot"
-        echo "√ Snapshot verified $(($(date +'%s') - $start))"
+        echo "$GC Snapshot verified $(($(date +'%s') - $start))"
 
         # Delete peers table.
         psql -d "$TARGETDB" -c "delete from peers;" &> /dev/null
@@ -307,7 +311,7 @@ case $1 in
 
         dropdb --if-exists "$TARGETDB"
 
-        echo "√ Snapshot created in $(($(date +'%s') - $start)) secs -> $SNAP_PATH"
+        echo "$GC Snapshot created in $(($(date +'%s') - $start)) secs -> $SNAP_PATH"
         ;;
     "reset")
         echo "This process will remove the database "
@@ -328,5 +332,9 @@ case $1 in
         ;;
     "logRotate")
         logrotate ./etc/logrotate.conf
+        ;;
+
+    *)
+        do_help
         ;;
 esac

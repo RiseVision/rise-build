@@ -21,3 +21,8 @@ The builder will create a docker environment by:
 When docker image is built, tar.gz can be created by running the newly created image.
 
 
+### Other scripts
+
+The scripts folder contains the install.sh script which will let user install RISE easily.
+
+  

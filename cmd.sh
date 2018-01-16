@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 
 . ./docker/build-assets/scripts/utils.sh
+. ./docker/build-assets/scripts/env_vars.sh
 
 if [ ! -d "core" ]; then
     echo "X please clone core in core/folder"
@@ -40,7 +41,7 @@ echo "Creating build environment…"
 sleep 2
 exec_cmd "docker build . -t rise_build_env"
 exit_if_prevfail
-echo "√ Environment built"
+echo "$GC Environment built"
 sleep 2
 
 cd ..
@@ -53,4 +54,4 @@ FINAL_NAME="rise_${VERSION}_${NETWORK}_${COMMITSHA}.tar.gz"
 mv out.tar.gz $FINAL_NAME
 sha1sum "$FINAL_NAME" > "${FINAL_NAME}.sha1"
 
-echo "√ Image created. ${FINAL_NAME}"
+echo "$GC Image created. ${FINAL_NAME}"

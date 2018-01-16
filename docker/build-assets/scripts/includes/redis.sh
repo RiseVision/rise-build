@@ -50,13 +50,13 @@ redis_ensure() {
 
 redis_start() {
     if redis_running ; then
-        echo "√ Redis is running."
+        echo "$GC Redis is running."
     else
         if ! redis-server "$REDIS_CONFIG_FILE" pidfile "$REDIS_PID" >> "$SH_LOG_FILE" 2>&1; then
-			echo "X Failed to start Redis."
+			echo "$RX Failed to start Redis."
 			exit 1
 		else
-			echo "√ Redis started successfully."
+			echo "$GC Redis started successfully."
 		fi
     fi
 }
@@ -64,10 +64,10 @@ redis_start() {
 
 redis_stop() {
     if ! redis_running; then
-        echo "X Redis is not running"
+        echo "$RX Redis is not running"
     else
         if is_redis_system; then
-            echo "X Cannot stop OS Level Redis"
+            echo "$RX Cannot stop OS Level Redis"
         else
             ## try with redis-cli
             if [ "$REDIS_PASSWORD" != "null" ]; then
@@ -78,12 +78,12 @@ redis_stop() {
 
             sleep 1
             if redis_running; then
-                echo "X Failed to stop redis through CLI. Force-stopping it"
+                echo "$RX Failed to stop redis through CLI. Force-stopping it"
                 pkill -9 "$(head -1 $REDIS_PID)"
-                echo "√ Redis-Server killed"
+                echo "$GC Redis-Server killed"
                 rm $REDIS_PID
             else
-                echo "√ Redis stopped"
+                echo "$GC Redis stopped"
             fi
 
         fi

@@ -11,3 +11,6 @@ export LD_LIBRARY_PATH="$(pwd)/../lib:$LD_LIBRARY_PATH"
 export PM2_HOME="$(pwd)/../.pm2"
 
 cd "$OLDPATH"
+
+export GC="$(tput setaf 2)√$(tput sgr0)"
+export RX="$(tput setaf 1)X$(tput sgr0)"
