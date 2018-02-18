@@ -257,7 +257,12 @@ case $1 in
         echo "Creating backup"
         tar -czf backup.tgz ${INSTALL_DIR} >> /dev/null 2>&1
         echo "$GC Backup created"
+        mv ${INSTALL_DIR} ${INSTALL_DIR}-old
         install
+        # copy all data
+        cp -a ${INSTALL_DIR}-old/data/. ${INSTALL_DIR}/data
+        cp -a ${INSTALL_DIR}-old/etc/. ${INSTALL_DIR}/etc
+        cp -a ${INSTALL_DIR}-old/.pm2 ${INSTALL_DIR}/
         start_node
         cleanup
         ;;
