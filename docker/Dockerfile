@@ -8,8 +8,8 @@ ARG PARALLEL_MAKE_JOBS=4
 ARG READLINE_DIR=readline-master
 ARG READLINE_URL=http://git.savannah.gnu.org/cgit/readline.git/snapshot/$READLINE_DIR.tar.gz
 
-ARG POSTGRES_DIR=postgresql-9.6.6
-ARG POSTGRES_URL=https://ftp.postgresql.org/pub/source/v9.6.6/$POSTGRES_DIR.tar.gz
+ARG POSTGRES_DIR=postgresql-9.6.8
+ARG POSTGRES_URL=https://ftp.postgresql.org/pub/source/v9.6.8/$POSTGRES_DIR.tar.gz
 
 ARG REDIS_DIR=redis-3.2.11
 ARG REDIS_URL=http://download.redis.io/releases/$REDIS_DIR.tar.gz
