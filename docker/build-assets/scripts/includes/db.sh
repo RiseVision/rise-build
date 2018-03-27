@@ -47,6 +47,7 @@ db_start() {
 			exit 1
 		else
 			echo "$GC DB started successfully."
+			sleep 3
 		fi
     fi
 }
@@ -84,7 +85,6 @@ db_initialize() {
             pg_ctl initdb -D "$DB_DATA" >> "$SH_LOG_FILE" 2>&1
             sleep 5
             db_start
-            sleep 2
         fi
     fi
 

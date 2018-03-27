@@ -212,10 +212,6 @@ initialize_if_necessary
 COMMAND="$1"
 
 case $1 in
-    "reset")
-        db_ensure "stopped"
-        db_reset
-        ;;
     "start")
         handle_start $2
         ;;
