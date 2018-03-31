@@ -65,7 +65,10 @@ initialize_if_necessary() {
         cat <<< '{
   "fileLogLevel": "error",
   "forging": {
-    "secret": []
+    "secret": [],
+    "access": {
+      "whiteList": [ "127.0.0.1" ]
+    }
   }
 }' > ./etc/node_config.json
         echo "$GC Created node-config file.."
@@ -128,6 +131,7 @@ do_help() {
     echo "Help for manager.sh:"
     echo -e "\tstart (what)            | Starts service. What can be node, pg, redis, all"
     echo -e "\tstop (what)             | Stops service. What can be node, pg, redis, all"
+    echo -e "\treload (what)           | Stops & start service. What can be node, pg, redis, all"
     echo -e "\tstatus                  | Print services status and pids"
     echo -e "\tbackup                  | Perform a database backup"
     echo -e "\trestoreBackup [file]    | Restore a database backup (uses latest if no file is provided)"
@@ -217,6 +221,10 @@ case $1 in
         ;;
     "stop")
         handle_stop $2
+        ;;
+    "reload")
+        handle_stop $2
+        handle_start $2
         ;;
     "status")
         if db_running; then
