@@ -257,6 +257,10 @@ case $1 in
         echo "Creating backup"
         tar -czf backup.tgz ${INSTALL_DIR} >> /dev/null 2>&1
         echo "$GC Backup created"
+        if [ -d "${INSTALL_DIR}-old" ]; then
+            echo "Removing old backup..."
+            rm -rf ${INSTALL_DIR}-old
+        fi
         mv ${INSTALL_DIR} ${INSTALL_DIR}-old
         install
         # copy all data
