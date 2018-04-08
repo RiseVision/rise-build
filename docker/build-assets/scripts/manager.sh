@@ -44,7 +44,6 @@ config() {
     CONFIG_PATH="$(pwd)/src/etc/${NETWORK}/config.json"
 	LOGS_DIR="$(pwd)/logs"
     SH_LOG_FILE="$LOGS_DIR/shell.out"
-    NUM_DELEGATES=101
 
     exec > >(tee -ia "$SH_LOG_FILE")
     exec 2>&1
@@ -319,7 +318,7 @@ case $1 in
         ;;
     "reset")
         echo "This process will remove the database "
-        read -r -n "Are you sure you want to proceed? (y/n): " YN
+        read -r -p "Are you sure you want to proceed? (y/n): " YN
 
         if [ "$YN" != "y" ]; then
             echo "Goodbye."
