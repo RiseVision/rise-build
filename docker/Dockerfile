@@ -1,6 +1,6 @@
 FROM ubuntu:16.04
 ARG coin=rise
-ARG NODE_VERSION=6.12.2
+ARG NODE_VERSION=8.11.1
 ARG NODE_URL=https://nodejs.org/download/release/v$NODE_VERSION/node-v$NODE_VERSION-linux-x64.tar.gz
 
 ARG PARALLEL_MAKE_JOBS=4

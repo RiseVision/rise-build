@@ -48,6 +48,7 @@ export LD_LIBRARY_PATH="$(pwd)/postgres/lib:$(pwd)/out/lib:$LD_LIBRARY_PATH"
 
 
 cd out/src
+rm -rf node_modulese
 npm i >> /dev/null
 chrpath -d "$(pwd)/node_modules/sodium/deps/libsodium/test/default/.libs/"*
 chrpath -d "$(pwd)/../lib/libreadline.so.7.0"
