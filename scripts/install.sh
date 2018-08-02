@@ -220,7 +220,7 @@ start_node() {
     pushd . > /dev/null
     cd ${INSTALL_DIR}
     ./manager.sh start all > /dev/null
-    sleep 5
+    sleep 8
     if ! (./manager.sh status | grep -q "NODE is running") ; then
         echo "$RX Node is not running :("
         exit 1
