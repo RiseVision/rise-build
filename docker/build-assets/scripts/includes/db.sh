@@ -12,6 +12,8 @@ db_envs() {
     export DB_LOG_FILE="${LOGS_DIR}/pgsql.log"
     export DB_SNAPSHOT="blockchain.db.gz"
     export DB_DOWNLOAD=Y
+
+    export PGPORT=$DB_PORT
 }
 
 db_pid() {
@@ -84,6 +86,7 @@ db_initialize() {
             db_reset
             pg_ctl initdb -D "$DB_DATA" >> "$SH_LOG_FILE" 2>&1
             sleep 5
+            sed -i "s/^#port = 5432/port = $DB_PORT/" $DB_DATA/postgresql.conf
             db_start
         fi
     fi
