@@ -249,13 +249,13 @@ case $1 in
         ;;
     "upgrade")
         pushd . > /dev/null
+        download
         cd ${INSTALL_DIR}
         ./manager.sh stop all
         popd > /dev/null
         parse_option "$@"
-        download
         echo "Creating backup"
-        tar -czf backup.tgz ${INSTALL_DIR} >> /dev/null 2>&1
+        tar -czf backup.tgz ${INSTALL_DIR} --exclude "${INSTALL_DIR}/data/backups" >> /dev/null 2>&1
         echo "$GC Backup created"
         if [ -d "${INSTALL_DIR}-old" ]; then
             echo "Removing old backup..."
