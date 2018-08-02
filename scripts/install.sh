@@ -17,7 +17,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 ######################################################################
 
-DOWNLOAD_BASEURL=${DOWNLOAD_BASEURL:-"https://downloads.rise.vision/"}
+DOWNLOAD_BASEURL=${DOWNLOAD_BASEURL:-"https://downloads.rise.vision/core/"}
 INSTALL_DIR="./rise"
 LOG_FILE=install.out
 
@@ -243,6 +243,10 @@ case $1 in
         ntp
         download
         install
+        # set the network file.
+        if [ ! -f "${INSTALL_DIR}/etc/.network" ]; then
+	        echo $NETWORK > "${INSTALL_DIR}/etc/.network"
+	    fi
         start_node
         cleanup
         echo "Installation completed"
