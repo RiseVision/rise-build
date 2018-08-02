@@ -17,6 +17,10 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 ######################################################################
 
+# Make sure that if anything fails the command script stops executing
+set -e
+set -o pipefail
+
 DOWNLOAD_BASEURL=${DOWNLOAD_BASEURL:-"https://downloads.rise.vision/core/"}
 INSTALL_DIR="./rise"
 LOG_FILE=install.out
@@ -170,6 +174,11 @@ ntp() {
 }
 
 download() {
+    if [ -f "$FILE" ]; then
+        echo "Removing old download file: $FILE"
+        rm $FILE;
+    fi
+
     echo "Downloading core from ${URL}"
     wget -q $URL >> /dev/null
     wget -q "${URL}.sha1" >> /dev/null
@@ -253,11 +262,11 @@ case $1 in
         ;;
     "upgrade")
         pushd . > /dev/null
+        parse_option "$@"
         download
         cd ${INSTALL_DIR}
         ./manager.sh stop all
         popd > /dev/null
-        parse_option "$@"
         echo "Creating backup"
         tar -czf backup.tgz ${INSTALL_DIR} --exclude "${INSTALL_DIR}/data/backups" >> /dev/null 2>&1
         echo "$GC Backup created"
