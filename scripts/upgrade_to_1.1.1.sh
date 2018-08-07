@@ -48,9 +48,8 @@ mv rise rise_1.0.x
 
 
 
-
 wget https://raw.githubusercontent.com/RiseVision/rise-build/master/scripts/install.sh
-bash install.sh install -r mainnet -u https://downloads.rise.vision/core/mainnet/rise_1.1.1_mainnet_6f40e287.tar.gz
+bash install.sh install -r mainnet -u https://downloads.rise.vision/core/mainnet/rise_1.1.1_mainnet_92f90ea0.tar.gz
 
 
 echo "Restoring data & backup"
