@@ -1,7 +1,6 @@
 #!/bin/bash
 # Make sure that if anything fails the command script stops executing
 set -e
-set -o pipefail
 
 
 if [ ! -d ./rise ]; then
