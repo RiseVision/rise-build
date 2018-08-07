@@ -19,7 +19,6 @@
 
 # Make sure that if anything fails the command script stops executing
 set -e
-set -o pipefail
 
 DOWNLOAD_BASEURL=${DOWNLOAD_BASEURL:-"https://downloads.rise.vision/core/"}
 INSTALL_DIR="./rise"
