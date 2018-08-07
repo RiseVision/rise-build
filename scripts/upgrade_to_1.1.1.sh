@@ -36,8 +36,9 @@ bash install.sh install -r mainnet -u https://downloads.rise.vision/core/mainnet
 echo "Restoring data & backup"
 cp -a ./rise_1.0.x/etc/.  ./rise/etc
 cp -a ./rise_1.0.x/.pm2   ./rise/
+cd rise
 ./manager.sh restoreBackup ../$BACKUP_NAME
-
+cd ..
 echo "Wait for node to apply database upgrades"
 sleep 60
 echo "All done :)"
