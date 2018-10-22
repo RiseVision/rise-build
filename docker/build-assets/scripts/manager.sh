@@ -289,6 +289,8 @@ case $1 in
         gunzip -c ./data/backups/latest | psql -U "$DB_USER" "$TARGETDB" >> /dev/null 2>&1
         exit_if_prevfail "Cannot import db to snapshot DB"
 
+        psql -d "$TARGETDB" -c "delete from exceptions;" &> /dev/null
+
         # run node in snapshot verification mode.
         cd ./src/
         node ./dist/app.js -n "$NETWORK" -s -o "\$.db.database=$TARGETDB"  > ../logs/snapshot.log 2>&1 & THEPID=$!
@@ -302,6 +304,8 @@ case $1 in
 
         # Delete peers table.
         psql -d "$TARGETDB" -c "delete from peers;" &> /dev/null
+        psql -d "$TARGETDB" -c "delete from info;" &> /dev/null
+        psql -d "$TARGETDB" -c "delete from exceptions;" &> /dev/null
 
         # Vacuum db before dumping
         vacuumdb --analyze --full "$TARGETDB" &> /dev/null
