@@ -57,7 +57,8 @@ chrpath -d "$(pwd)/../lib/libhistory.so.7.0"
 npm run transpile
 npm prune  --production >> /dev/null
 
-
+# Copy Build file
+echo -n $COMMITSHA > build
 # Create script symlinks
 cd ..
 ln -s ./scripts/manager.sh manager.sh

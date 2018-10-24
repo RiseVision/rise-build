@@ -47,7 +47,7 @@ sleep 2
 cd ..
 echo "Creating package…"
 sleep 2
-exec_cmd "docker run --rm -v $(pwd):/home/rise/tar -v $(pwd)/core:/home/rise/core rise_build_env"
+exec_cmd "docker run --rm -e \"COMMITSHA=${COMMITSHA}\" -v $(pwd):/home/rise/tar -v $(pwd)/core:/home/rise/core rise_build_env"
 exit_if_prevfail
 
 FINAL_NAME="rise_${VERSION}_${NETWORK}_${COMMITSHA}.tar.gz"

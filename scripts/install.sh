@@ -76,7 +76,7 @@ check_prerequisites() {
 
 
 usage() {
-	echo "Usage: $0 <install|upgrade> [-n <mainnet|testnet>] [-n] [-u <URL>]"
+	echo "Usage: $0 <install|upgrade> [-r <mainnet|testnet>] [-n] [-u <URL>]"
 	echo "install         -- install"
 	echo "upgrade         -- upgrade"
 	echo " -r <RELEASE>   -- choose mainnet or testnet"
