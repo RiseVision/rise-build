@@ -116,7 +116,9 @@ parse_option() {
 }
 
 ntp() {
-    if [[ -f "/etc/debian_version" &&  ! -f "/proc/user_beancounters" ]]; then
+    if [ $(systemd-detect-virt) == "lxc" ] || [ $(systemd-detect-virt) == "openvz" ]; then
+        echo "$GC Your host is running in LXC or OpenVZ container. NTP is not required."
+    elif [[ -f "/etc/debian_version" &&  ! -f "/proc/user_beancounters" ]]; then
         if sudo pgrep -x "ntpd" > /dev/null; then
             echo "$GC NTP is running"
         else
@@ -176,6 +178,10 @@ download() {
     if [ -f "$FILE" ]; then
         echo "Removing old download file: $FILE"
         rm $FILE;
+    fi
+    if [ -f "$FILE.sha1" ]; then
+        echo "Removing old download file: $FILE.sha1"
+        rm $FILE.sha1;
     fi
 
     echo "Downloading core from ${URL}"
