@@ -35,11 +35,19 @@ fi
 
 if [ "$(uname)" != "Linux" ]; then
     echo "$RX $(uname) is not an allowed operating system"
+	exit 1
 fi
 
 if [ "$(uname -m)" != "x86_64" ]; then
     echo "$RX $(uname -m) is an invalid architecture."
+	exit 1
 fi
+
+MINSPACE=`df -k --output=avail "$PWD" | tail -n1`   
+if [[ $MINSPACE -lt 2621440 ]]; then      
+    echo -e "There is probably not enough free space in $PWD to run the node.\t\t\t\t\t$(tput setaf 1)Failed$(tput sgr0)"
+	exit 1
+fi;
 
 # Setup logging
 exec > >(tee -ia $LOG_FILE)
@@ -73,7 +81,6 @@ check_prerequisites() {
 		fi
 	fi
 }
-
 
 usage() {
 	echo "Usage: $0 <install|upgrade> [-r <mainnet|testnet>] [-n] [-u <URL>]"
