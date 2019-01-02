@@ -29,13 +29,12 @@ RX="$(tput setaf 1)X$(tput sgr0)"
 
 if [[ $EUID -eq 0 ]]; then
     echo "$RX This script should not be run using sudo or as root. Please run it as a regular user."
-
     exit 1
 fi
 
 if [ "$(uname)" != "Linux" ]; then
     echo "$RX $(uname) is not an allowed operating system"
-	exit 1
+    exit 1
 fi
 
 if [ "$(uname -m)" != "x86_64" ]; then
@@ -44,9 +43,9 @@ if [ "$(uname -m)" != "x86_64" ]; then
 fi
 
 MINSPACE=`df -k --output=avail "$PWD" | tail -n1`   
-if [[ $MINSPACE -lt 2621440 ]]; then      
+if [[ $MINSPACE -lt 2621440 ]]; then
     echo -e "There is probably not enough free space in $PWD to run the node.\t\t\t\t\t$(tput setaf 1)Failed$(tput sgr0)"
-	exit 1
+    exit 1
 fi;
 
 # Setup logging
