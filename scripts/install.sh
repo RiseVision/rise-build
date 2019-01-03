@@ -1,6 +1,6 @@
-#!/bin/bash
+#!/usr/bin/env bash
 #
-# Copyright (C) 2018 Rise Vision PLC
+# Copyright (C) 2019 Rise Vision PLC
 # Copyright (C) 2017 Lisk Foundation
 #
 # This program is free software: you can redistribute it and/or modify
@@ -23,6 +23,7 @@ set -e
 DOWNLOAD_BASEURL=${DOWNLOAD_BASEURL:-"https://downloads.rise.vision/core/"}
 INSTALL_DIR="./rise"
 LOG_FILE=install.out
+MINSPACE=`df -k --output=avail "$PWD" | tail -n1`  
 
 GC="$(tput setaf 2)√$(tput sgr0)"
 RX="$(tput setaf 1)X$(tput sgr0)"
@@ -37,16 +38,15 @@ if [ "$(uname)" != "Linux" ]; then
     exit 1
 fi
 
-if [ "$(uname -m)" != "x86_64" ]; then
-    echo "$RX $(uname -m) is an invalid architecture."
-	exit 1
-fi
-
-MINSPACE=`df -k --output=avail "$PWD" | tail -n1`   
 if [[ $MINSPACE -lt 2621440 ]]; then
-    echo -e "There is probably not enough free space in $PWD to run the node.\t\t\t\t\t$(tput setaf 1)Failed$(tput sgr0)"
+    echo -e "$RX Not enough free space in $PWD to install the node."
     exit 1
 fi;
+
+if [ "$(uname -m)" != "x86_64" ]; then
+    echo "$RX $(uname -m) is an invalid architecture."
+    exit 1
+fi
 
 # Setup logging
 exec > >(tee -ia $LOG_FILE)
@@ -56,6 +56,43 @@ exec 2>&1
 # export LANG=en_US.UTF-8
 # export LANGUAGE=en_US.UTF-8
 
+check_prerequisites() {
+
+    if [[ ! -f /usr/bin/sudo ]]; then
+        echo "$RX Install sudo as root user before continuing."
+        echo "Ubuntu Issue: apt-get install sudo"
+        echo "Redhat/Centos Issue: yum install sudo"
+        echo "Also make sure that your user has sudo access."
+        exit 2
+    fi
+
+    if ! sudo -n true 2>/dev/null; then
+        echo "Please provide sudo password for validation"
+        if sudo -Sv -p ''; then
+            echo -e "Sudo authenticated.\t\t\t\t\t$(tput setaf 2)Passed$(tput sgr0)"
+            else
+            echo -e "Unable to authenticate Sudo.\t\t\t\t\t$(tput setaf 1)Failed$(tput sgr0)"
+            exit 2
+        fi
+    fi
+
+    if [ -f /etc/redhat-release ]; then
+        packageList="epel-release jq wget curl tar"
+
+        for packageName in $packageList; do
+            rpm --quiet --query $packageName || sudo yum install -q -y $packageName > /dev/null 2>&1
+        done
+    fi
+
+    if [ -f /etc/lsb-release ]; then
+        packageList="wget curl tar coreutils"
+
+        for packageName in $packageList; do
+            apt -qq list $packageName 2>&1 >/dev/null| grep install || apt-get --yes install $packageName
+        done   
+    fi
+}
+
 command_check() {
     if [ ! -x "$(command -v "$1")" ]; then
         echo "$RX $1 executable cannot be found. Please install"
@@ -63,59 +100,41 @@ command_check() {
     fi
 }
 
-check_prerequisites() {
-    command_check "wget"
-    command_check "curl"
-    command_check "tar"
-    command_check "sudo"
-    command_check "sha1sum"
-
-    if ! sudo -n true 2>/dev/null; then
-		echo "Please provide sudo password for validation"
-		if sudo -Sv -p ''; then
-			echo -e "Sudo authenticated.\t\t\t\t\t$(tput setaf 2)Passed$(tput sgr0)"
-		else
-			echo -e "Unable to authenticate Sudo.\t\t\t\t\t$(tput setaf 1)Failed$(tput sgr0)"
-			exit 2
-		fi
-	fi
-}
-
 usage() {
-	echo "Usage: $0 <install|upgrade> [-r <mainnet|testnet>] [-n] [-u <URL>]"
-	echo "install         -- install"
-	echo "upgrade         -- upgrade"
-	echo " -r <RELEASE>   -- choose mainnet or testnet"
-	echo " -u             -- release url"
+    echo "Usage: $0 <install|upgrade> [-r <mainnet|testnet>] [-n] [-u <URL>]"
+    echo "install         -- install"
+    echo "upgrade         -- upgrade"
+    echo " -r <RELEASE>   -- choose mainnet or testnet"
+    echo " -u             -- release url"
 }
 
 parse_option() {
-	OPTIND=2
-	while getopts :d:r:u:hn0: OPT; do
-		 case "$OPT" in
-			 r) NETWORK="$OPTARG" ;;
-			 n) INSTALL_NTP=1 ;;
-			 u) URL="$OPTARG" ;;
-		 esac
-	 done
+    OPTIND=2
+    while getopts :d:r:u:hn0: OPT; do
+        case "$OPT" in
+             r) NETWORK="$OPTARG" ;;
+             n) INSTALL_NTP=1 ;;
+             u) URL="$OPTARG" ;;
+        esac
+     done
 
-	if [ "$NETWORK" ]; then
-		if [[ "$NETWORK" != "testnet" && "$NETWORK" != "mainnet" ]]; then
-			echo "-r <testnet|mainnet>"
-			usage
-			exit 1
-		fi
-	else
-	    if [ -f "${INSTALL_DIR}/etc/.network" ]; then
-	        NETWORK=$(head -1 "${INSTALL_DIR}/etc/.network");
-	    else
-	        NETWORK="mainnet"
-	    fi
-	fi
+    if [ "$NETWORK" ]; then
+        if [[ "$NETWORK" != "testnet" && "$NETWORK" != "mainnet" ]]; then
+            echo "-r <testnet|mainnet>"
+            usage
+            exit 1
+        fi
+    else
+        if [ -f "${INSTALL_DIR}/etc/.network" ]; then
+            NETWORK=$(head -1 "${INSTALL_DIR}/etc/.network");
+        else
+            NETWORK="mainnet"
+        fi
+    fi
 
-	if [ "$URL" == "" ]; then
-	    URL="${DOWNLOAD_BASEURL}${NETWORK}/latest.tar.gz"
-	fi
+    if [ "$URL" == "" ]; then
+        URL="${DOWNLOAD_BASEURL}${NETWORK}/latest.tar.gz"
+    fi
 
     FILE=$(basename "$URL")
 
