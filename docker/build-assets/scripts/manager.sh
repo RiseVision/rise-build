@@ -42,7 +42,7 @@ config() {
         exit 2
     fi
     CONFIG_PATH="$(pwd)/src/etc/${NETWORK}/config.json"
-	LOGS_DIR="$(pwd)/logs"
+    LOGS_DIR="$(pwd)/logs"
     SH_LOG_FILE="$LOGS_DIR/shell.out"
 
     exec > >(tee -ia "$SH_LOG_FILE")
@@ -133,6 +133,7 @@ do_help() {
     echo -e "\treload (what)           | Stops & start service. What can be node, pg, redis, all"
     echo -e "\tstatus                  | Print services status and pids"
     echo -e "\tbackup                  | Perform a database backup"
+    echo -e "\tdownloadSnapshot        | Download and optionally install latest Snapshot database from network"
     echo -e "\trestoreBackup [file]    | Restore a database backup (uses latest if no file is provided)"
 
     echo -e "\n** Advanced commands **"
@@ -151,12 +152,12 @@ setup_cron() {
     fi
     crontab=$($cmd -l 2> /dev/null | sed '/#managed_rise/d' 2> /dev/null)
 
-	crontab=$(cat <<-EOF
-		$crontab
-		@reboot $(command -v "bash") $(pwd)/manager.sh start all > ${LOGS_DIR}/cron.log 2>&1 #managed_rise
-		@daily $(command -v "bash") $(pwd)/manager.sh logRotate > ${LOGS_DIR}/cron.log 2>&1 #managed_rise
+    crontab=$(cat <<-EOF
+        $crontab
+        @reboot $(command -v "bash") $(pwd)/manager.sh start all > ${LOGS_DIR}/cron.log 2>&1 #managed_rise
+        @daily $(command -v "bash") $(pwd)/manager.sh logRotate > ${LOGS_DIR}/cron.log 2>&1 #managed_rise
 EOF
-	)
+    )
 
     oldcrontab=$($cmd -l 2> /dev/null)
 
@@ -164,13 +165,13 @@ EOF
         return 0
     fi
 
-	if ! printf "%s\n" "$crontab" | $cmd - >> "$SH_LOG_FILE" 2>&1; then
-		echo "$RX Failed to update crontab."
-		return 1
-	else
-		echo "$GC Crontab updated successfully."
-		return 0
-	fi
+    if ! printf "%s\n" "$crontab" | $cmd - >> "$SH_LOG_FILE" 2>&1; then
+        echo "$RX Failed to update crontab."
+        return 1
+    else
+        echo "$GC Crontab updated successfully."
+        return 0
+    fi
 }
 
 
@@ -246,8 +247,29 @@ case $1 in
     "backup")
         do_backup
         ;;
+    "downloadSnapshot")
+        echo "Downloading latest Snapshot database from ${NETWORK} as ./latestsnap.gz"
+        curl -o ./latestsnap.gz --progress "https://downloads.rise.vision/snapshots/${NETWORK}/latest"
+        if [ $? != 0 ]; then
+            rm -f ./latestsnap.gz 
+            echo "$RX Failed to download Snapshot."
+            exit 2
+        else
+            echo "$GC Snapshot downloaded successfully."
+        fi
+        read -r -p "Do you want to install latest ${NETWORK} Snapshot database (y/n)? " YN
+        echo
+        
+        if [[ "$YN" != "y" ]]
+        then
+           echo "Snapshot database downloaded but not installed."
+           exit 0
+        fi
+        ./manager.sh restoreBackup ./latestsnap.gz
+        rm -f ./latestsnap.gz
+        ;;
     "restoreBackup")
-        if is_backupping; then
+        if is_backupping; thento
             echo "$RX Backup in progress."
             exit 1
         fi
