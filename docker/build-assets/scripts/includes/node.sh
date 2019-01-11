@@ -86,8 +86,19 @@ node_initialize() {
 }
 
 node_status() {
+
     if node_running; then
-        echo "$GC NODE is running [$(node_pid)] - [H=$(curl -s http://localhost:${NODE_PORT}/api/blocks/getStatus | jq -r ".height")]"
+        local_nodeheight=`curl -s http://localhost:${NODE_PORT}/api/blocks/getStatus | jq -r '.height'`
+
+        if [ "$NETWORK" == "mainnet" ]
+        then
+           network_nodeheight=`curl -s https://wallet.rise.vision/api/blocks/getStatus | jq -r '.height'`
+        else
+           network_nodeheight=`curl -s https://twallet.rise.vision/api/blocks/getStatus | jq -r '.height'`
+        fi
+
+        percent_sync=`printf "%.0f\n" $(( $local_nodeheight/$network_nodeheight*100 )) | awk '{print int($1)}'`
+        echo "$GC NODE is running [$(node_pid)] - [local Height:$local_nodeheight - Network Height:$network_nodeheight - Sync:$percent_sync%]"
     else
         echo "$RX NODE not running!"
     fi
