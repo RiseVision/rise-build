@@ -269,7 +269,7 @@ case $1 in
         rm -f ./latestsnap.gz
         ;;
     "restoreBackup")
-        if is_backupping; thento
+        if is_backupping; then
             echo "$RX Backup in progress."
             exit 1
         fi
