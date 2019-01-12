@@ -88,7 +88,7 @@ check_prerequisites() {
         packageList="wget curl tar coreutils"
 
         for packageName in $packageList; do
-            apt -qq list $packageName 2>&1 >/dev/null| grep install || apt-get --yes install $packageName
+            apt -qq list $packageName 2>&1 >/dev/null| grep install || sudo apt-get --yes install $packageName
         done   
     fi
 }
