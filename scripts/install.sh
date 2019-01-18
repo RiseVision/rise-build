@@ -152,8 +152,8 @@ parse_option() {
 set_timezone() {
     if [ "$(date +%Z)" == "UTC" ]; then
         echo "$GC Timezone is UTC"
-    elif [ $(systemd-detect-virt) == "lxc" ] || [ $(systemd-detect-virt) == "openvz" ] || [[ -f "/proc/user_beancounters" ]]; then
-        echo "$YE Your host is running in an LXC or OpenVZ container. Timezones must be set on host"
+    elif [ $(systemd-detect-virt -c) != "none" ]; then
+        echo "$YE Your host is running in a Docker, LXC or OpenVZ container. Timezones must be set on host"
     elif [ -x "$(command -v timedatectl)" ]; then
         [ "$SET_TIMEZONE" ] || read -r -n 1 -p "Would like to set the system timezone to UTC? (y/n): " REPLY
         if [[ "$SET_TIMEZONE" || "$REPLY" =~ ^[Yy]$ ]]; then
@@ -169,8 +169,8 @@ set_timezone() {
 }
 
 ntp() {
-    if [ $(systemd-detect-virt) == "lxc" ] || [ $(systemd-detect-virt) == "openvz" ]; then
-        echo "$YE Your host is running in an LXC or OpenVZ container, and NTP is not compatible."
+    if [ $(systemd-detect-virt -c) != "none" ]; then
+        echo "$YE Your host is running in a Docker, LXC or OpenVZ container, and NTP is not compatible."
         echo "   Your node may lose blocks or stay behind due to wrong clock sync."
     elif [[ -f "/etc/debian_version" &&  ! -f "/proc/user_beancounters" ]]; then
         if sudo pgrep -x "ntpd" > /dev/null; then
