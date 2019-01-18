@@ -29,13 +29,14 @@ cp -a postgres/{lib,bin,share} out/
 cp jq/jq out/bin
 
 # copy libreadline and libhistory
-cp -vf readline/shlib/{libhistory.so.7.0,libreadline.so.7.0}  out/lib
+READLINE_VERSION=$(ls readline/shlib | grep libreadline | awk -F'[^0-9]*' '{print $2}')
+cp -vf readline/shlib/{libhistory.so.$READLINE_VERSION.0,libreadline.so.$READLINE_VERSION.0}  out/lib
 cp -vf readline/{libhistory.a,libreadline.a}  out/lib
 cd out/lib
-ln -s libreadline.so.7.0 libreadline.so.7
-ln -s libreadline.so.7.0 libreadline.so
-ln -s libhistory.so.7.0 libhistory.so.7
-ln -s libhistory.so.7.0 libhistory.so
+ln -s libreadline.so.$READLINE_VERSION.0 libreadline.so.$READLINE_VERSION
+ln -s libreadline.so.$READLINE_VERSION.0 libreadline.so
+ln -s libhistory.so.$READLINE_VERSION.0 libhistory.so.$READLINE_VERSION
+ln -s libhistory.so.$READLINE_VERSION.0 libhistory.so
 
 # COPY over node and npm
 cd ~

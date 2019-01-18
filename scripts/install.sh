@@ -27,6 +27,7 @@ MINSPACE=`df -k --output=avail "$PWD" | tail -n1`
 
 GC="$(tput setaf 2)√$(tput sgr0)"
 RX="$(tput setaf 1)X$(tput sgr0)"
+YE="$(tput setaf 3)\!\!$(tput sgr0)"
 
 if [[ $EUID -eq 0 ]]; then
     echo "$RX This script should not be run using sudo or as root. Please run it as a regular user."
@@ -43,10 +44,14 @@ if [[ $MINSPACE -lt 2621440 ]]; then
     exit 1
 fi;
 
-if [ "$(uname -m)" != "x86_64" ]; then
-    echo "$RX $(uname -m) is an invalid architecture."
-    exit 1
-fi
+case "$(uname -m)" in
+    "x86_64") ARCH="x86" ;;
+    "armv7l") ARCH="arm" ;;
+    *)
+        echo "$RX $(uname -m) is an invalid architecture."
+        exit 1
+        ;;
+esac
 
 # Setup logging
 exec > >(tee -ia $LOG_FILE)
@@ -101,11 +106,13 @@ command_check() {
 }
 
 usage() {
-    echo "Usage: $0 <install|upgrade> [-r <mainnet|testnet>] [-n] [-u <URL>]"
+    echo "Usage: $0 <install|upgrade> [-r <mainnet|testnet>] [-n] [-t] [-u <URL>]"
     echo "install         -- install"
     echo "upgrade         -- upgrade"
     echo " -r <RELEASE>   -- choose mainnet or testnet"
     echo " -u             -- release url"
+    echo " -n             -- install ntp"
+    echo " -t             -- set timezone to UTC"
 }
 
 parse_option() {
@@ -114,6 +121,7 @@ parse_option() {
         case "$OPT" in
              r) NETWORK="$OPTARG" ;;
              n) INSTALL_NTP=1 ;;
+             t) SET_TIMEZONE=1 ;;
              u) URL="$OPTARG" ;;
         esac
      done
@@ -133,16 +141,37 @@ parse_option() {
     fi
 
     if [ "$URL" == "" ]; then
-        URL="${DOWNLOAD_BASEURL}${NETWORK}/latest.tar.gz"
+        FILE_BASE=$([ "$ARCH" == "arm" ] && echo "latest.arm" || echo "latest")
+        URL="${DOWNLOAD_BASEURL}${NETWORK}/${FILE_BASE}.tar.gz"
     fi
 
     FILE=$(basename "$URL")
 
 }
 
+set_timezone() {
+    if [ "$(date +%Z)" == "UTC" ]; then
+        echo "$GC Timezone is UTC"
+    elif [ $(systemd-detect-virt) == "lxc" ] || [ $(systemd-detect-virt) == "openvz" ] || [[ -f "/proc/user_beancounters" ]]; then
+        echo "$YE Your host is running in an LXC or OpenVZ container. Timezones must be set on host"
+    elif [ -x "$(command -v timedatectl)" ]; then
+        [ "$SET_TIMEZONE" ] || read -r -n 1 -p "Would like to set the system timezone to UTC? (y/n): " REPLY
+        if [[ "$SET_TIMEZONE" || "$REPLY" =~ ^[Yy]$ ]]; then
+            timedatectl set-timezone UTC
+            if sudo pgrep -x "ntpd" > /dev/null; then
+                timedatectl set-ntp 1
+            fi
+            echo "$GC Timezone set to UTC"
+        fi
+    else
+        echo "$YE Timezone could not be set"
+    fi
+}
+
 ntp() {
     if [ $(systemd-detect-virt) == "lxc" ] || [ $(systemd-detect-virt) == "openvz" ]; then
-        echo "$GC Your host is running in LXC or OpenVZ container. NTP is not required."
+        echo "$YE Your host is running in an LXC or OpenVZ container, and NTP is not compatible."
+        echo "   Your node may lose blocks or stay behind due to wrong clock sync."
     elif [[ -f "/etc/debian_version" &&  ! -f "/proc/user_beancounters" ]]; then
         if sudo pgrep -x "ntpd" > /dev/null; then
             echo "$GC NTP is running"
@@ -184,7 +213,7 @@ ntp() {
                     sudo service ntpd start
                     if pgrep -x "ntpd" > /dev/null; then
                         echo "$GC NTP is running"
-                        else
+                    else
                         echo -e "\nCore requires NTP running on Debian based systems. Please check /etc/ntp.conf and correct any issues."
                         exit 0
                     fi
@@ -195,7 +224,7 @@ ntp() {
             fi
         fi # End Redhat Checks
     elif [[ -f "/proc/user_beancounters" ]]; then
-        echo "_ Running OpenVZ VM, NTP and Chrony are not required"
+        echo "$YE Running OpenVZ VM, NTP and Chrony are not compatible"
     fi
 }
 
@@ -271,8 +300,9 @@ start_node() {
 }
 
 cleanup() {
-    rm ${FILE} ${FILE}.sha1
-    rm $0
+    rm -f ${FILE} ${FILE}.sha1
+    rm -f $LOG_FILE
+    rm -f $0
 }
 
 case $1 in
@@ -280,6 +310,7 @@ case $1 in
         parse_option "$@"
         check_prerequisites
         ntp
+        set_timezone
         download
         install
         # set the network file.

@@ -34,12 +34,31 @@ if [ "$NETWORK" == "" ]; then
     fi
 fi
 
+if [ "$ARM" == "" ]; then
+    read -r -p "Is this an ARM build? (y/n): " YN
+
+    if [ "$YN" == "y" ]; then
+        ARM="ARM"
+    fi
+fi
+
+NAME="rise_${VERSION}_${NETWORK}_${COMMITSHA}"
+IMAGE_NAME="rise_build_env"
+DOCKERFILE="Dockerfile"
+
+if [ "$ARM" == "ARM" ]; then
+    NAME="${NAME}.arm"
+    IMAGE_NAME="${IMAGE_NAME}_arm"
+    DOCKERFILE="${DOCKERFILE}.arm"
+fi
+
+FINAL_NAME="${NAME}.tar.gz"
 
 cd docker
 
 echo "Creating build environment…"
 sleep 2
-exec_cmd "docker build . -t rise_build_env"
+exec_cmd "docker build -t ${IMAGE_NAME} -f ${DOCKERFILE} ."
 exit_if_prevfail
 echo "$GC Environment built"
 sleep 2
@@ -47,10 +66,9 @@ sleep 2
 cd ..
 echo "Creating package…"
 sleep 2
-exec_cmd "docker run --rm -e \"COMMITSHA=${COMMITSHA}\" -v $(pwd):/home/rise/tar -v $(pwd)/core:/home/rise/core rise_build_env"
+exec_cmd "docker run --rm -e \"COMMITSHA=${COMMITSHA}\" -v $(pwd):/home/rise/tar -v $(pwd)/core:/home/rise/core ${IMAGE_NAME}"
 exit_if_prevfail
 
-FINAL_NAME="rise_${VERSION}_${NETWORK}_${COMMITSHA}.tar.gz"
 mv out.tar.gz $FINAL_NAME
 sha1sum "$FINAL_NAME" > "${FINAL_NAME}.sha1"
 
