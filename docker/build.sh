@@ -38,25 +38,24 @@ ln -s libreadline.so.$READLINE_VERSION.0 libreadline.so
 ln -s libhistory.so.$READLINE_VERSION.0 libhistory.so.$READLINE_VERSION
 ln -s libhistory.so.$READLINE_VERSION.0 libhistory.so
 
-# COPY over node and npm
+# COPY over node
 cd ~
 cp -a ./node/lib/node_modules ./out/lib
 cp -a ./node/bin/* ./out/bin
 
 cd
-export PATH="$(pwd)/postgres/bin:$(pwd)/out/bin:$PATH"
+export PATH="$(pwd)/postgres/bin:$(pwd)/yarn/bin:$(pwd)/out/bin:$PATH"
 export LD_LIBRARY_PATH="$(pwd)/postgres/lib:$(pwd)/out/lib:$LD_LIBRARY_PATH"
-
 
 cd out/src
 rm -rf node_modules
-npm i >> /dev/null
+yarn install
+./node_modules/.bin/lerna bootstrap
 chrpath -d "$(pwd)/node_modules/sodium/deps/libsodium/test/default/.libs/"*
 chrpath -d "$(pwd)/../lib/libreadline.so.7.0"
 chrpath -d "$(pwd)/../lib/libhistory.so.7.0"
 
-npm run transpile
-npm prune  --production >> /dev/null
+yarn transpile
 
 # Copy Build file
 echo -n $COMMITSHA > build

@@ -41,7 +41,7 @@ config() {
         rm ${NETWORK_FILE}
         exit 2
     fi
-    CONFIG_PATH="$(pwd)/src/etc/${NETWORK}/config.json"
+    CONFIG_PATH="$(pwd)/src/packages/rise/etc/${NETWORK}/config.json"
     LOGS_DIR="$(pwd)/logs"
     SH_LOG_FILE="$LOGS_DIR/shell.out"
 

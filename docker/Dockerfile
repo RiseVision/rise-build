@@ -1,7 +1,10 @@
 FROM ubuntu:16.04
 ARG coin=rise
-ARG NODE_VERSION=8.11.1
+ARG NODE_VERSION=10.15.0
 ARG NODE_URL=https://nodejs.org/download/release/v$NODE_VERSION/node-v$NODE_VERSION-linux-x64.tar.gz
+
+ARG YARN_VERSION=1.13.0
+ARG YARN_URL=https://yarnpkg.com/downloads/$YARN_VERSION/yarn-v$YARN_VERSION.tar.gz
 
 ARG PARALLEL_MAKE_JOBS=4
 
@@ -94,6 +97,11 @@ RUN curl -o node.tar.gz -J -L $NODE_URL && \
     tar -zxf node.tar.gz && \
     rm node.tar.gz && \
     mv node-v${NODE_VERSION}-linux-x64 node;
+
+# Install Yarn
+RUN curl -o yarn.tar.gz -J -L $YARN_URL && \
+    tar -zxf yarn.tar.gz && \
+    mv yarn-v${YARN_VERSION} yarn
 
 # Build logrotate
 RUN curl -o logrotate.tar.gz -J -L $LOGROTATE_URL && \

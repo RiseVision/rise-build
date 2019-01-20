@@ -1,7 +1,7 @@
 {
   "apps": [{
     "name": "node.testnet",
-    "script": "./dist/app.js",
+    "script": "./packages/core-launchpad/dist/binary.js",
     "cwd": "./src",
     "pid_file": "../pids/node.testnet.pid",
     "out_file": "../logs/node.testnet.log",

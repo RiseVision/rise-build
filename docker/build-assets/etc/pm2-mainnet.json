@@ -1,7 +1,7 @@
 {
   "apps": [{
     "name": "node.mainnet",
-    "script": "./dist/app.js",
+    "script": "./packages/core-launchpad/dist/binary.js",
     "cwd": "./src",
     "pid_file": "../pids/node.mainnet.pid",
     "out_file": "../logs/node.mainnet.log",
