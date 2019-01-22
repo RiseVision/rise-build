@@ -56,6 +56,7 @@ chrpath -d "$(pwd)/../lib/libreadline.so.7.0"
 chrpath -d "$(pwd)/../lib/libhistory.so.7.0"
 
 yarn transpile
+./node_modules/.bin/lerna link
 
 # Copy Build file
 echo -n $COMMITSHA > build

@@ -101,6 +101,7 @@ RUN curl -o node.tar.gz -J -L $NODE_URL && \
 # Install Yarn
 RUN curl -o yarn.tar.gz -J -L $YARN_URL && \
     tar -zxf yarn.tar.gz && \
+    rm yarn.tar.gz && \
     mv yarn-v${YARN_VERSION} yarn
 
 # Build logrotate
