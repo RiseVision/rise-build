@@ -3,8 +3,11 @@ FROM arm32v7/ubuntu:16.04
 COPY ./build-assets/qemu-arm-static /usr/bin/qemu-arm-static
 
 ARG coin=rise
-ARG NODE_VERSION=8.11.1
+ARG NODE_VERSION=10.15.0
 ARG NODE_URL=https://nodejs.org/download/release/v$NODE_VERSION/node-v$NODE_VERSION-linux-armv7l.tar.gz
+
+ARG YARN_VERSION=1.13.0
+ARG YARN_URL=https://yarnpkg.com/downloads/$YARN_VERSION/yarn-v$YARN_VERSION.tar.gz
 
 ARG PARALLEL_MAKE_JOBS=4
 
@@ -32,7 +35,7 @@ ENV LC_ALL en_US.UTF-8
 # Install prerequisites to build and set locales to en_US utf8.
 
 RUN apt-get update && \
-    apt-get install -y -qq autoconf automake build-essential sudo curl chrpath git libncurses5-dev libpopt-dev libsodium-dev libssl-dev libtool locales python zlib1g-dev libssl-dev&& \
+    apt-get install -y -qq autoconf automake build-essential sudo curl chrpath git libncurses5-dev libpopt-dev libsodium-dev libssl-dev libtool locales python zlib1g-dev libssl-dev && \
     sed -i -e 's/# en_US.UTF-8 UTF-8/en_US.UTF-8 UTF-8/' /etc/locale.gen && \
     dpkg-reconfigure --frontend=noninteractive locales && \
     update-locale LANG=en_US.UTF-8
@@ -98,6 +101,12 @@ RUN curl -o node.tar.gz -J -L $NODE_URL && \
     rm node.tar.gz && \
     mv node-v${NODE_VERSION}-linux-armv7l node;
 
+# Install Yarn
+RUN curl -o yarn.tar.gz -J -L $YARN_URL && \
+    tar -zxf yarn.tar.gz && \
+    rm yarn.tar.gz && \
+    mv yarn-v${YARN_VERSION} yarn
+
 # Build logrotate
 RUN curl -o logrotate.tar.gz -J -L $LOGROTATE_URL && \
     tar -zxf logrotate.tar.gz && \
@@ -108,13 +117,14 @@ RUN cd logrotate && \
     autoreconf -fiv  && \
     ./configure --with-state-file-path='./data/logrotate.status' && \
     make
-COPY ./build.sh /home/$coin/build.sh
 
+COPY ./build.sh /home/$coin/build.sh
 
 RUN mkdir -p out/bin out/lib out/data/pg out/data/redis out/etc out/logs out/pids && \
     chmod 0700 out/data/pg
 
 COPY ./build-assets/etc out/etc/
 COPY ./build-assets/scripts out/scripts/
+
 
 CMD ["bash", "-c", "./build.sh"]
