@@ -27,7 +27,7 @@ MINSPACE=`df -k --output=avail "$PWD" | tail -n1`
 
 GC="$(tput setaf 2)√$(tput sgr0)"
 RX="$(tput setaf 1)X$(tput sgr0)"
-YE="$(tput setaf 3)\!\!$(tput sgr0)"
+YE="$(tput setaf 3)‼$(tput sgr0)"
 
 if [[ $EUID -eq 0 ]]; then
     echo "$RX This script should not be run using sudo or as root. Please run it as a regular user."
@@ -156,6 +156,7 @@ set_timezone() {
         echo "$YE Your host is running in a Docker, LXC or OpenVZ container. Timezones must be set on host"
     elif [ -x "$(command -v timedatectl)" ]; then
         [ "$SET_TIMEZONE" ] || read -r -n 1 -p "Would like to set the system timezone to UTC? (y/n): " REPLY
+        echo ""
         if [[ "$SET_TIMEZONE" || "$REPLY" =~ ^[Yy]$ ]]; then
             timedatectl set-timezone UTC
             if sudo pgrep -x "ntpd" > /dev/null; then
