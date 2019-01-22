@@ -65,6 +65,8 @@ cd ..
 ln -s ./scripts/manager.sh manager.sh
 ln -s ../data/pg/postmaster.pid ./pids/pg.pid
 
+mkdir -p ./src/packages/rise/logs
+ln -s ../src/packages/rise/logs ./logs/node
 
 # install pm2
 

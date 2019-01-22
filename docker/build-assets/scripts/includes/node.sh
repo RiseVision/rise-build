@@ -5,6 +5,7 @@
 node_envs() {
     export PM2_CONFIG="$(pwd)/etc/pm2-${NETWORK}.json"
     export PM2_APPNAME=$(cat "$PM2_CONFIG" | jq -r ".apps[0].name")
+    export PM2_PWD=$(cat "$PM2_CONFIG" | jq -r ".apps[0].cwd")
     export NODE_PORT="$(cat "$CONFIG_PATH" | jq -r ".port")"
     _init_node_pid
 }
@@ -53,7 +54,7 @@ node_start() {
     if node_running ; then
         echo "$GC NODE is running."
     else
-        if ! pm2 start "$PM2_CONFIG"  >> "$SH_LOG_FILE" 2>&1; then
+        if ! PWD=$(realpath "$PM2_PWD") pm2 start "$PM2_CONFIG"  >> "$SH_LOG_FILE" 2>&1; then
 			echo "$RX Failed to start NODE."
 			exit 1
 		else
