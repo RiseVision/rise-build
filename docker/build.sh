@@ -52,8 +52,8 @@ rm -rf node_modules
 yarn install
 ./node_modules/.bin/lerna bootstrap
 chrpath -d "$(pwd)/node_modules/sodium/deps/libsodium/test/default/.libs/"*
-chrpath -d "$(pwd)/../lib/libreadline.so.7.0"
-chrpath -d "$(pwd)/../lib/libhistory.so.7.0"
+chrpath -d "$(pwd)/../lib/libreadline.so.$READLINE_VERSION.0"
+chrpath -d "$(pwd)/../lib/libhistory.so.$READLINE_VERSION.0"
 
 yarn transpile
 ./node_modules/.bin/lerna link

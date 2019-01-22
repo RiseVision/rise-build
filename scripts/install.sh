@@ -162,6 +162,8 @@ set_timezone() {
                 timedatectl set-ntp 1
             fi
             echo "$GC Timezone set to UTC"
+        else
+            echo "$YE Timezone not set"
         fi
     else
         echo "$YE Timezone could not be set"
