@@ -52,8 +52,8 @@ cd out/src
 rm -rf node_modules
 npm i >> /dev/null
 chrpath -d "$(pwd)/node_modules/sodium/deps/libsodium/test/default/.libs/"*
-chrpath -d "$(pwd)/../lib/libreadline.so.7.0"
-chrpath -d "$(pwd)/../lib/libhistory.so.7.0"
+chrpath -d "$(pwd)/../lib/libreadline.so.$READLINE_VERSION.0"
+chrpath -d "$(pwd)/../lib/libhistory.so.$READLINE_VERSION.0"
 
 npm run transpile
 npm prune  --production >> /dev/null
