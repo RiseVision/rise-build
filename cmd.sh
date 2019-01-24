@@ -42,6 +42,30 @@ if [ "$ARM" == "" ]; then
     fi
 fi
 
+if [ "$ARM" == "ARM" ]; then
+    QEMU_DEP_LOC=/usr/bin/qemu-arm-static
+    LOCAL_QEMU_DEP_LOC=./docker/build-assets/qemu-arm-static
+
+    if [ ! -f "$LOCAL_QEMU_DEP_LOC" ]; then
+        if [ ! -f "$QEMU_DEP_LOC" ]; then
+            echo "Installing $(basename "$QEMU_DEP_LOC")..."
+            docker run --rm --privileged multiarch/qemu-user-static:register 2&> /dev/null
+            echo "Done!"
+        fi
+        if [ ! -f "$QEMU_DEP_LOC" ]; then
+            echo "Failed to install 'qemu-user-static' bins! Necessary for ARM builds."
+            exit 1
+        fi
+        echo "Copying $QEMU_DEP_LOC -> $LOCAL_QEMU_DEP_LOC"
+        cp "$QEMU_DEP_LOC" "$LOCAL_QEMU_DEP_LOC"
+    fi
+
+    if [[ ! -x "$LOCAL_QEMU_DEP_LOC" ]]; then
+        echo "$(basename $LOCAL_QEMU_DEP_LOC) not executable! Please grant permissions:"
+        (set -x; sudo chmod +x "$LOCAL_QEMU_DEP_LOC")
+    fi
+fi
+
 NAME="rise_${VERSION}_${NETWORK}_${COMMITSHA}"
 IMAGE_NAME="rise_build_env"
 DOCKERFILE="Dockerfile"
