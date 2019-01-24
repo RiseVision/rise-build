@@ -112,7 +112,6 @@ usage() {
     echo " -r <RELEASE>   -- choose mainnet or testnet"
     echo " -u             -- release url"
     echo " -n             -- install ntp"
-    echo " -t             -- set timezone to UTC"
 }
 
 parse_option() {
@@ -121,7 +120,6 @@ parse_option() {
         case "$OPT" in
              r) NETWORK="$OPTARG" ;;
              n) INSTALL_NTP=1 ;;
-             t) SET_TIMEZONE=1 ;;
              u) URL="$OPTARG" ;;
         esac
      done
@@ -147,28 +145,6 @@ parse_option() {
 
     FILE=$(basename "$URL")
 
-}
-
-set_timezone() {
-    if [ "$(date +%Z)" == "UTC" ]; then
-        echo "$GC Timezone is UTC"
-    elif [ $(systemd-detect-virt -c) != "none" ]; then
-        echo "$YE Your host is running in a Docker, LXC or OpenVZ container. Timezones must be set on host"
-    elif [ -x "$(command -v timedatectl)" ]; then
-        [ "$SET_TIMEZONE" ] || read -r -n 1 -p "Would like to set the system timezone to UTC? (y/n): " REPLY
-        echo ""
-        if [[ "$SET_TIMEZONE" || "$REPLY" =~ ^[Yy]$ ]]; then
-            timedatectl set-timezone UTC
-            if sudo pgrep -x "ntpd" > /dev/null; then
-                timedatectl set-ntp 1
-            fi
-            echo "$GC Timezone set to UTC"
-        else
-            echo "$YE Timezone not set"
-        fi
-    else
-        echo "$YE Timezone could not be set"
-    fi
 }
 
 ntp() {
@@ -313,7 +289,6 @@ case $1 in
         parse_option "$@"
         check_prerequisites
         ntp
-        set_timezone
         download
         install
         # set the network file.
