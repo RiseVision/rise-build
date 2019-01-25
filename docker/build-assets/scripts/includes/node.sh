@@ -97,7 +97,7 @@ node_status() {
            network_nodeheight=`curl -s https://twallet.rise.vision/api/blocks/getStatus | jq -r '.height'`
         fi
 
-        percent_sync=`echo $((100*$local_nodeheight/$network_nodeheight))`
+        percent_sync=$((100*$local_nodeheight/$network_nodeheight))
         echo "$GC NODE is running [$(node_pid)] - [local Height:$local_nodeheight - Network Height:$network_nodeheight - Sync:$percent_sync%]"
     else
         echo "$RX NODE not running!"
