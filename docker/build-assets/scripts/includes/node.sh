@@ -54,11 +54,11 @@ node_start() {
         echo "$GC NODE is running."
     else
         if ! pm2 start "$PM2_CONFIG"  >> "$SH_LOG_FILE" 2>&1; then
-			echo "$RX Failed to start NODE."
-			exit 1
-		else
-			echo "$GC NODE started successfully."
-		fi
+            echo "$RX Failed to start NODE."
+            exit 1
+        else
+            echo "$GC NODE started successfully."
+        fi
     fi
 }
 
@@ -97,7 +97,7 @@ node_status() {
            network_nodeheight=`curl -s https://twallet.rise.vision/api/blocks/getStatus | jq -r '.height'`
         fi
 
-        percent_sync=`printf "%.0f\n" $(( $local_nodeheight/$network_nodeheight*100 )) | awk '{print int($1)}'`
+        percent_sync=$((100*$local_nodeheight/$network_nodeheight))
         echo "$GC NODE is running [$(node_pid)] - [local Height:$local_nodeheight - Network Height:$network_nodeheight - Sync:$percent_sync%]"
     else
         echo "$RX NODE not running!"
