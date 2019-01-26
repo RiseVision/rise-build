@@ -218,7 +218,7 @@ download() {
     fi
 
     echo "Downloading core from ${URL}"
-    wget -q $URL >> /dev/null
+    wget -q --show-progress --progress=bar:force $URL
     wget -q "${URL}.sha1" >> /dev/null
 
     if [ -f "$FILE" ]; then
