@@ -5,3 +5,6 @@ src/
 unpacked/
 http/
 rise-node
+*.tar.gz
+*.tar.gz.sha1
+docker/build-assets/qemu-arm-static
