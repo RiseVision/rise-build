@@ -47,6 +47,7 @@ fi;
 case "$(uname -m)" in
     "x86_64") ARCH="x86" ;;
     "armv7l") ARCH="arm" ;;
+    "aarch64") ARCH="arm64" ;;
     *)
         echo "$RX $(uname -m) is an invalid architecture."
         exit 1
@@ -139,7 +140,7 @@ parse_option() {
     fi
 
     if [ "$URL" == "" ]; then
-        FILE_BASE=$([ "$ARCH" == "arm" ] && echo "latest.arm" || echo "latest")
+        FILE_BASE=$([ "$ARCH" == "arm" ] && echo "latest.arm" || ([ "$ARCH" == "arm64" ] && echo "latest.arm64" || echo "latest.x86_64"))
         URL="${DOWNLOAD_BASEURL}${NETWORK}/${FILE_BASE}.tar.gz"
     fi
 

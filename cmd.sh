@@ -55,7 +55,7 @@ if [ "$ARM" == "ARM" ] || [ "$ARM" == "ARM64" ]; then
 
     if [ ! -f "$LOCAL_QEMU_DEP_LOC" ]; then
         echo "Copy over your $(basename $LOCAL_QEMU_DEP_LOC) file in $LOCAL_QEMU_DEP_LOC";
-
+        exit 1;
     fi
 
     if [[ ! -x "$LOCAL_QEMU_DEP_LOC" ]]; then

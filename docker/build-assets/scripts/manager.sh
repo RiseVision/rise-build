@@ -153,9 +153,9 @@ setup_cron() {
     crontab=$($cmd -l 2> /dev/null | sed '/#managed_rise/d' 2> /dev/null)
 
     crontab=$(cat <<-EOF
-        $crontab
-        @reboot $(command -v "bash") $(pwd)/manager.sh start all > ${LOGS_DIR}/cron.log 2>&1 #managed_rise
-        @daily $(command -v "bash") $(pwd)/manager.sh logRotate > ${LOGS_DIR}/cron.log 2>&1 #managed_rise
+$crontab
+@reboot $(command -v "bash") $(pwd)/manager.sh start all > ${LOGS_DIR}/cron.log 2>&1 #managed_rise
+@daily $(command -v "bash") $(pwd)/manager.sh logRotate > ${LOGS_DIR}/cron.log 2>&1 #managed_rise
 EOF
     )
 
