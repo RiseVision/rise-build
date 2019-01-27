@@ -50,13 +50,13 @@ export LD_LIBRARY_PATH="$(pwd)/postgres/lib:$(pwd)/out/lib:$LD_LIBRARY_PATH"
 
 cd out/src
 rm -rf node_modules
-npm i >> /dev/null
+npm i
 chrpath -d "$(pwd)/node_modules/sodium/deps/libsodium/test/default/.libs/"*
 chrpath -d "$(pwd)/../lib/libreadline.so.$READLINE_VERSION.0"
 chrpath -d "$(pwd)/../lib/libhistory.so.$READLINE_VERSION.0"
 
 npm run transpile
-npm prune  --production >> /dev/null
+npm prune --production >> /dev/null
 
 # Copy Build file
 echo -n $COMMITSHA > build

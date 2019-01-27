@@ -38,26 +38,24 @@ if [ "$ARM" == "" ]; then
     read -r -p "Is this an ARM build? (y/n): " YN
 
     if [ "$YN" == "y" ]; then
-        ARM="ARM"
+        read -r -p "Is this an 64 build? (y/n): " YN
+        if [ "$YN" == "y" ]; then
+            ARM="ARM64"
+        else
+            ARM="ARM"
+        fi
     fi
 fi
 
-if [ "$ARM" == "ARM" ]; then
-    QEMU_DEP_LOC=/usr/bin/qemu-arm-static
-    LOCAL_QEMU_DEP_LOC=./docker/build-assets/qemu-arm-static
+if [ "$ARM" == "ARM" ] || [ "$ARM" == "ARM64" ]; then
+    LOCAL_QEMU_DEP_LOC="./docker/build-assets/qemu-arm-static"
+    if [ "$ARM" == "ARM64" ]; then
+        LOCAL_QEMU_DEP_LOC="./docker/build-assets/qemu-aarch64-static"
+    fi
 
     if [ ! -f "$LOCAL_QEMU_DEP_LOC" ]; then
-        if [ ! -f "$QEMU_DEP_LOC" ]; then
-            echo "Installing $(basename "$QEMU_DEP_LOC")..."
-            docker run --rm --privileged multiarch/qemu-user-static:register 2&> /dev/null
-            echo "Done!"
-        fi
-        if [ ! -f "$QEMU_DEP_LOC" ]; then
-            echo "Failed to install 'qemu-user-static' bins! Necessary for ARM builds."
-            exit 1
-        fi
-        echo "Copying $QEMU_DEP_LOC -> $LOCAL_QEMU_DEP_LOC"
-        cp "$QEMU_DEP_LOC" "$LOCAL_QEMU_DEP_LOC"
+        echo "Copy over your $(basename $LOCAL_QEMU_DEP_LOC) file in $LOCAL_QEMU_DEP_LOC";
+
     fi
 
     if [[ ! -x "$LOCAL_QEMU_DEP_LOC" ]]; then
@@ -74,6 +72,12 @@ if [ "$ARM" == "ARM" ]; then
     NAME="${NAME}.arm"
     IMAGE_NAME="${IMAGE_NAME}_arm"
     DOCKERFILE="${DOCKERFILE}.arm"
+elif [ "$ARM" == "ARM64" ]; then
+    NAME="${NAME}.arm64"
+    IMAGE_NAME="${IMAGE_NAME}_arm64"
+    DOCKERFILE="${DOCKERFILE}.arm64"
+else
+    NAME="${NAME}.x86_x64"
 fi
 
 FINAL_NAME="${NAME}.tar.gz"
@@ -90,7 +94,7 @@ sleep 2
 cd ..
 echo "Creating package…"
 sleep 2
-exec_cmd "docker run --rm -e \"COMMITSHA=${COMMITSHA}\" -v $(pwd):/home/rise/tar -v $(pwd)/core:/home/rise/core ${IMAGE_NAME}"
+exec_cmd "docker run -it --rm -e \"COMMITSHA=${COMMITSHA}\" -v $(pwd):/home/rise/tar -v $(pwd)/core:/home/rise/core ${IMAGE_NAME}"
 exit_if_prevfail
 
 mv out.tar.gz $FINAL_NAME
