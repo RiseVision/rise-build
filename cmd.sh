@@ -49,7 +49,10 @@ if [ "$ARM" == "ARM" ]; then
     if [ ! -f "$LOCAL_QEMU_DEP_LOC" ]; then
         if [ ! -f "$QEMU_DEP_LOC" ]; then
             echo "Installing $(basename "$QEMU_DEP_LOC")..."
-            docker run --rm --privileged multiarch/qemu-user-static:register 2&> /dev/null
+            QEMU_BINS_CONTAINER=$(docker create -it jpopesculian/qemu-user-static-bins:latest)
+            sudo docker cp $QEMU_BINS_CONTAINER:/usr/bin/qemu-arm-static /usr/bin/qemu-arm-static
+            docker rm $QEMU_BINS_CONTAINER 2&> /dev/null
+            sudo docker run --rm --privileged multiarch/qemu-user-static:register --reset
             echo "Done!"
         fi
         if [ ! -f "$QEMU_DEP_LOC" ]; then
