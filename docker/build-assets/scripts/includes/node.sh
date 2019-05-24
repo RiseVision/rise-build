@@ -88,17 +88,27 @@ node_initialize() {
 node_status() {
 
     if node_running; then
-        local_nodeheight=`curl -s http://localhost:${NODE_PORT}/api/blocks/getStatus | jq -r '.height'`
+        local_nodeheight=`curl -s http://localhost:${NODE_PORT}/api/blocks/getStatus | jq -r '.height'` 2>/dev/null
 
-        if [ "$NETWORK" == "mainnet" ]
-        then
-           network_nodeheight=`curl -s https://wallet.rise.vision/api/blocks/getStatus | jq -r '.height'`
+        if [[ ! "$local_nodeheight" =~ ^[0-9]+$ ]] ; then
+           echo "$RX Problem fetching local height"
+           exit 1
+        fi
+
+        if [ "$NETWORK" == "mainnet" ] ; then
+           network_nodeheight=`curl -s https://wallet.rise.vision/api/blocks/getStatus | jq -r '.height'` 2>/dev/null
         else
-           network_nodeheight=`curl -s https://twallet.rise.vision/api/blocks/getStatus | jq -r '.height'`
+           network_nodeheight=`curl -s https://twallet.rise.vision/api/blocks/getStatus | jq -r '.height'` 2>/dev/null
+        fi
+
+        if [[ ! "$network_nodeheight" =~ ^[0-9]+$ ]] ; then
+           echo "$RX Problem fetching network height check your internet connection"
+           exit 1
         fi
 
         percent_sync=$((100*$local_nodeheight/$network_nodeheight))
-        echo "$GC NODE is running [$(node_pid)] - [local Height:$local_nodeheight - Network Height:$network_nodeheight - Sync:$percent_sync%]"
+        echo "$GC NODE is running [$(node_pid)]"
+        echo "* Sync $percent_sync% [local Height:$local_nodeheight - Network Height:$network_nodeheight]"
     else
         echo "$RX NODE not running!"
     fi
